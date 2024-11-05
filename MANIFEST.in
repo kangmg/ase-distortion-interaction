@@ -1,5 +1,4 @@
 include README.md
-include LICENSE
 include THIRDPARTY.txt
 include ase_dias/models/aimnet2/aimnet2_wb97m-d3_ens.jpt
 include ase_dias/models/aimnet2/aimnet2_b973c_ens.jpt
