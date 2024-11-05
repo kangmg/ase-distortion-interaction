@@ -18,6 +18,8 @@ setup(
         'requests',
         'ase>=3.22.1',
         'torch>=2.2.1',
+        'py3Dmol',
+        'rdkit'
     ],
     classifiers=[ 
         'Programming Language :: Python :: 3',

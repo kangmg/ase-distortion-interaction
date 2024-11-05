@@ -3,3 +3,5 @@ numpy
 requests
 ase>=3.22.1
 torch==2.0.0
+rdkit
+py3Dmol
