@@ -11,15 +11,15 @@ def available_data():
 
   Usage
   -----
-  >>> from aimDIAS import available_data()
+  >>> from ase_dias import available_data()
   >>> available_data()
   """
-  samples_url = "https://raw.githubusercontent.com/kangmg/aimDIAS/main/examples/samples.txt"
+  samples_url = "https://raw.githubusercontent.com/kangmg/ase-distortion-interaction/main/examples/samples.txt"
   response = requests.get(samples_url)
   if response.status_code == 200:
     print(response.text)
   else:
-    print(f" Failed to load the available data list.\n Please visit manually. \n URL : https://raw.githubusercontent.com/kangmg/aimDIAS/main/examples/samples.txt")
+    print(f" Failed to load the available data list.\n Please visit manually. \n URL : https://raw.githubusercontent.com/kangmg/ase-distortion-interaction/main/examples/samples.txt")
 
 
 def load_data(dataName:str, save_file:bool=False, save_folder:str="./"):
@@ -52,7 +52,7 @@ def load_data(dataName:str, save_file:bool=False, save_folder:str="./"):
   >>> load_data('example.txt', save_file=True, save_folder='/path/to/folder/')
   """
   # load sample data from git repository
-  data_url = f"https://raw.githubusercontent.com/kangmg/aimDIAS/main/examples/{dataName}"
+  data_url = f"https://raw.githubusercontent.com/kangmg/ase-distortion-interaction/main/examples/{dataName}"
   tmp = "https://raw.githubusercontent.com/kangmg/ascii_art/main/ascii_arts/ilovecat"
   
   if dataName == "mycat":

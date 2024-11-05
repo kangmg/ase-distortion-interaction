@@ -36,7 +36,7 @@ models = lambda : print("""
 
 [Note] 
 - Both `Abbr.' and `Full Name` are supported.
-- The ensemble models( `b973c`,  `wb97m-d3`) are included in the aimDIAS package. However, other models will be automatically downloaded when they are called.
+- The ensemble models( `b973c`,  `wb97m-d3`) are included in the ase_dias package. However, other models will be automatically downloaded when they are called.
 """)
 
 
@@ -94,7 +94,7 @@ def model_checker(modelPath:str)->None:
 
     # model download
     name = basename(modelPath)
-    github_url = f"https://github.com/kangmg/aimDIAS/raw/main/models/{name}" # TO BE CHANGE
+    github_url = f"https://github.com/kangmg/ase-distortion-interaction/raw/main/models/{name}" # TO BE CHANGE
     wget.download(github_url, modelPath)
     print("\033[34m\nModel successfully downloaded.\033[0m\n")
   else:
@@ -501,7 +501,7 @@ def trajDIAS(
     resultSavePath=resultSavePath, 
     **save_kws
     )
-  print("aimDIAS CALCULATION TERMINATED NORMALLY")
+  print("ase_dias CALCULATION TERMINATED NORMALLY")
   return trajDIASresult
 
 
@@ -680,7 +680,7 @@ def dias_run(
   ...     "CH3+": (+1, [1, 3, 4, 5]),
   ...     "Cl-": (-1, [6])
   ... }
-  >>> aimDIAS_run("trajectory.xyz", fragments_params)
+  >>> dias_run("trajectory.xyz", fragments_params)
   """
   # unit check
   available_units = ["EV", "KCAL/MOL", "KJ/MOL", "HARTREE"]
