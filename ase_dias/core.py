@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from ase_dias.utilities import is_ipython, progress_bar, husl_palette, markers_, json_dump, draw_xyz
 from importlib.util import find_spec
 import subprocess
+import warnings
 
 models = lambda : print("""
 - Supported models
@@ -145,10 +146,18 @@ def potential_energy(calc:ase.calculators.calculator, fragment:ase.Atoms, charge
   -------
     - potential energy(float) : The potential energy of the molecular fragment.
   """
-  Calculator = calc(**{
+  use_spin = calc_kwargs.get('use_spin', False)
+
+  if use_spin:
+    total_e = sum(atom.number for atom in fragment) - charge
+    spin = 0 if total_e % 2 == 0 else 1
+
+  _calc_kwargs = {
     **calc_kwargs,
     'charge':charge
-  })
+    }
+  if use_spin: _calc_kwargs['spin'] = spin
+  Calculator = calc(**_calc_kwargs)
   fragment.calc = Calculator
   return fragment.get_potential_energy()
 
@@ -166,11 +175,21 @@ def optimize(calc:ase.calculators.calculator, fragment:ase.Atoms, charge:int, fm
   -------
     - log(str) : optimization logging
   """
-  Calculator = calc(**{
+  use_spin = calc_kwargs.get('use_spin', False)
+
+  if use_spin:
+    total_e = sum(atom.number for atom in fragment) - charge
+    spin = 0 if total_e % 2 == 0 else 1
+
+  _calc_kwargs = {
     **calc_kwargs,
     'charge':charge
-  })  
+    }
+  if use_spin: _calc_kwargs['spin'] = spin
+
+  Calculator = calc(**_calc_kwargs)
   fragment.calc = Calculator
+
   optimize = BFGS(atoms=fragment)
   optimize.run(fmax=fmax, steps=steps)
 
@@ -484,6 +503,9 @@ def trajDIAS(
     -------
       - trajDIASresult(dict) : A dictionary containing DIAS results for each frame in the trajectory.
   """
+  if calc_kwargs.get('use_spin'):
+    warnings.warn('The current spin estimation is based on the total number of electrons.', UserWarning)
+    
   trajDIASresult = dict()
   trajNum = len(read_traj(trajFile))
   for IRC_idx, xyzString in enumerate(read_traj(trajFile, returnString=True)):
