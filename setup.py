@@ -1,11 +1,8 @@
 from setuptools import setup, find_namespace_packages
-from importlib import import_module
-from ase_dias import __version__
-
 
 setup(
     name='ase-dias',
-    version=__version__,
+    version='0.0.1',
     author='Kang mingi',
     author_email='kangmg@korea.ac.kr',
     description='An ASE-compatible plugin for distortion interaction analysis.',
