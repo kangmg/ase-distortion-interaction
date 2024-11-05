@@ -1,0 +1,1321 @@
+{
+    "title": "",
+    "note": "",
+    "trajectory_file": "DA.xyz",
+    "submission_date": "2024-11-05 16:18",
+    "result": {
+        "0": {
+            "molecule": {
+                "total": -15693.337066318454,
+                "distortion": 0.024616846818389604,
+                "interaction": -15693.361683165273
+            },
+            "diene": {
+                "distortion": 0.012634211301701725
+            },
+            "dienophile": {
+                "distortion": 0.011982635516687878
+            }
+        },
+        "1": {
+            "molecule": {
+                "total": -15693.33705068998,
+                "distortion": 0.024507321089004108,
+                "interaction": -15693.361558011067
+            },
+            "diene": {
+                "distortion": 0.012570005786983529
+            },
+            "dienophile": {
+                "distortion": 0.011937315302020579
+            }
+        },
+        "2": {
+            "molecule": {
+                "total": -15693.336871361229,
+                "distortion": 0.024425181481092295,
+                "interaction": -15693.36129654271
+            },
+            "diene": {
+                "distortion": 0.012352733463558252
+            },
+            "dienophile": {
+                "distortion": 0.012072448017534043
+            }
+        },
+        "3": {
+            "molecule": {
+                "total": -15693.336312759282,
+                "distortion": 0.024074756325717317,
+                "interaction": -15693.360387515608
+            },
+            "diene": {
+                "distortion": 0.012096422036847798
+            },
+            "dienophile": {
+                "distortion": 0.011978334288869519
+            }
+        },
+        "4": {
+            "molecule": {
+                "total": -15693.33543235873,
+                "distortion": 0.023442560845069238,
+                "interaction": -15693.358874919575
+            },
+            "diene": {
+                "distortion": 0.011595983436563984
+            },
+            "dienophile": {
+                "distortion": 0.011846577408505254
+            }
+        },
+        "5": {
+            "molecule": {
+                "total": -15693.334266151893,
+                "distortion": 0.023489669670198055,
+                "interaction": -15693.357755821562
+            },
+            "diene": {
+                "distortion": 0.011569287757083657
+            },
+            "dienophile": {
+                "distortion": 0.011920381913114397
+            }
+        },
+        "6": {
+            "molecule": {
+                "total": -15693.332920043507,
+                "distortion": 0.02342092843628052,
+                "interaction": -15693.356340971943
+            },
+            "diene": {
+                "distortion": 0.011440460588346468
+            },
+            "dienophile": {
+                "distortion": 0.011980467847934051
+            }
+        },
+        "7": {
+            "molecule": {
+                "total": -15693.331047990416,
+                "distortion": 0.023365599114185898,
+                "interaction": -15693.35441358953
+            },
+            "diene": {
+                "distortion": 0.011334942237226642
+            },
+            "dienophile": {
+                "distortion": 0.012030656876959256
+            }
+        },
+        "8": {
+            "molecule": {
+                "total": -15693.32907552854,
+                "distortion": 0.023351363269284775,
+                "interaction": -15693.352426891808
+            },
+            "diene": {
+                "distortion": 0.01119349577675166
+            },
+            "dienophile": {
+                "distortion": 0.012157867492533114
+            }
+        },
+        "9": {
+            "molecule": {
+                "total": -15693.326461394881,
+                "distortion": 0.023590763880747545,
+                "interaction": -15693.350052158763
+            },
+            "diene": {
+                "distortion": 0.01131884214191814
+            },
+            "dienophile": {
+                "distortion": 0.012271921738829406
+            }
+        },
+        "10": {
+            "molecule": {
+                "total": -15693.323650426268,
+                "distortion": 0.023566607656903216,
+                "interaction": -15693.347217033925
+            },
+            "diene": {
+                "distortion": 0.011191770361620001
+            },
+            "dienophile": {
+                "distortion": 0.012374837295283214
+            }
+        },
+        "11": {
+            "molecule": {
+                "total": -15693.320388416316,
+                "distortion": 0.02379633773580281,
+                "interaction": -15693.344184754053
+            },
+            "diene": {
+                "distortion": 0.011145178355945973
+            },
+            "dienophile": {
+                "distortion": 0.012651159379856836
+            }
+        },
+        "12": {
+            "molecule": {
+                "total": -15693.316755812186,
+                "distortion": 0.023873000896855956,
+                "interaction": -15693.340628813083
+            },
+            "diene": {
+                "distortion": 0.011205865761439782
+            },
+            "dienophile": {
+                "distortion": 0.012667135135416174
+            }
+        },
+        "13": {
+            "molecule": {
+                "total": -15693.313019457924,
+                "distortion": 0.024506120176738477,
+                "interaction": -15693.337525578101
+            },
+            "diene": {
+                "distortion": 0.011125177621579496
+            },
+            "dienophile": {
+                "distortion": 0.013380942555158981
+            }
+        },
+        "14": {
+            "molecule": {
+                "total": -15693.308761740864,
+                "distortion": 0.02990427074746549,
+                "interaction": -15693.338666011612
+            },
+            "diene": {
+                "distortion": 0.01116551726408943
+            },
+            "dienophile": {
+                "distortion": 0.01873875348337606
+            }
+        },
+        "15": {
+            "molecule": {
+                "total": -15693.304180205923,
+                "distortion": 0.03042449298845895,
+                "interaction": -15693.334604698912
+            },
+            "diene": {
+                "distortion": 0.011195074184797704
+            },
+            "dienophile": {
+                "distortion": 0.019229418803661247
+            }
+        },
+        "16": {
+            "molecule": {
+                "total": -15693.299259350844,
+                "distortion": 0.030428710766500444,
+                "interaction": -15693.32968806161
+            },
+            "diene": {
+                "distortion": 0.011272614097833866
+            },
+            "dienophile": {
+                "distortion": 0.019156096668666578
+            }
+        },
+        "17": {
+            "molecule": {
+                "total": -15693.293895070912,
+                "distortion": 0.03152979567221337,
+                "interaction": -15693.325424866583
+            },
+            "diene": {
+                "distortion": 0.011679382932925364
+            },
+            "dienophile": {
+                "distortion": 0.019850412739288004
+            }
+        },
+        "18": {
+            "molecule": {
+                "total": -15693.288221205603,
+                "distortion": 0.035215410093769606,
+                "interaction": -15693.323436615698
+            },
+            "diene": {
+                "distortion": 0.011792174283982604
+            },
+            "dienophile": {
+                "distortion": 0.023423235809787002
+            }
+        },
+        "19": {
+            "molecule": {
+                "total": -15693.282301753006,
+                "distortion": 0.036765097775059985,
+                "interaction": -15693.319066850781
+            },
+            "diene": {
+                "distortion": 0.012255331304913852
+            },
+            "dienophile": {
+                "distortion": 0.024509766470146133
+            }
+        },
+        "20": {
+            "molecule": {
+                "total": -15693.27573488256,
+                "distortion": 0.03809452205950947,
+                "interaction": -15693.313829404618
+            },
+            "diene": {
+                "distortion": 0.012452104960175348
+            },
+            "dienophile": {
+                "distortion": 0.025642417099334125
+            }
+        },
+        "21": {
+            "molecule": {
+                "total": -15693.268953479772,
+                "distortion": 0.039681477525846276,
+                "interaction": -15693.308634957299
+            },
+            "diene": {
+                "distortion": 0.01277117860809085
+            },
+            "dienophile": {
+                "distortion": 0.026910298917755426
+            }
+        },
+        "22": {
+            "molecule": {
+                "total": -15693.261592904117,
+                "distortion": 0.04138621304718981,
+                "interaction": -15693.302979117165
+            },
+            "diene": {
+                "distortion": 0.013077453741061618
+            },
+            "dienophile": {
+                "distortion": 0.028308759306128195
+            }
+        },
+        "23": {
+            "molecule": {
+                "total": -15693.25398960771,
+                "distortion": 0.0447058881745761,
+                "interaction": -15693.298695495885
+            },
+            "diene": {
+                "distortion": 0.01470604442874901
+            },
+            "dienophile": {
+                "distortion": 0.029999843745827093
+            }
+        },
+        "24": {
+            "molecule": {
+                "total": -15693.245789112567,
+                "distortion": 0.047081116764275066,
+                "interaction": -15693.292870229332
+            },
+            "diene": {
+                "distortion": 0.01517813039754401
+            },
+            "dienophile": {
+                "distortion": 0.031902986366731056
+            }
+        },
+        "25": {
+            "molecule": {
+                "total": -15693.237221389423,
+                "distortion": 0.04974321909867285,
+                "interaction": -15693.286964608522
+            },
+            "diene": {
+                "distortion": 0.0157899008190725
+            },
+            "dienophile": {
+                "distortion": 0.03395331827960035
+            }
+        },
+        "26": {
+            "molecule": {
+                "total": -15693.2281269403,
+                "distortion": 0.05281765645577252,
+                "interaction": -15693.280944596754
+            },
+            "diene": {
+                "distortion": 0.016532534220459638
+            },
+            "dienophile": {
+                "distortion": 0.03628512223531288
+            }
+        },
+        "27": {
+            "molecule": {
+                "total": -15693.218546015789,
+                "distortion": 0.0563109520044236,
+                "interaction": -15693.274856967793
+            },
+            "diene": {
+                "distortion": 0.017411334660209832
+            },
+            "dienophile": {
+                "distortion": 0.038899617344213766
+            }
+        },
+        "28": {
+            "molecule": {
+                "total": -15693.20867222501,
+                "distortion": 0.06204780116240727,
+                "interaction": -15693.270720026172
+            },
+            "diene": {
+                "distortion": 0.01837191246158909
+            },
+            "dienophile": {
+                "distortion": 0.04367588870081818
+            }
+        },
+        "29": {
+            "molecule": {
+                "total": -15693.198571499404,
+                "distortion": 0.06664884823385364,
+                "interaction": -15693.26522034764
+            },
+            "diene": {
+                "distortion": 0.019734538853299455
+            },
+            "dienophile": {
+                "distortion": 0.04691430938055419
+            }
+        },
+        "30": {
+            "molecule": {
+                "total": -15693.187732408318,
+                "distortion": 0.07191568745929544,
+                "interaction": -15693.259648095776
+            },
+            "diene": {
+                "distortion": 0.021198037542490056
+            },
+            "dienophile": {
+                "distortion": 0.050717649916805385
+            }
+        },
+        "31": {
+            "molecule": {
+                "total": -15693.176493478242,
+                "distortion": 0.0778451933292672,
+                "interaction": -15693.254338671572
+            },
+            "diene": {
+                "distortion": 0.02293024369100749
+            },
+            "dienophile": {
+                "distortion": 0.054914949638259714
+            }
+        },
+        "32": {
+            "molecule": {
+                "total": -15693.165052969149,
+                "distortion": 0.08481646986274427,
+                "interaction": -15693.249869439012
+            },
+            "diene": {
+                "distortion": 0.02512578890673467
+            },
+            "dienophile": {
+                "distortion": 0.0596906809560096
+            }
+        },
+        "33": {
+            "molecule": {
+                "total": -15693.153174124127,
+                "distortion": 0.09286161484214972,
+                "interaction": -15693.246035738968
+            },
+            "diene": {
+                "distortion": 0.027594006991421338
+            },
+            "dienophile": {
+                "distortion": 0.06526760785072838
+            }
+        },
+        "34": {
+            "molecule": {
+                "total": -15693.140601479283,
+                "distortion": 0.10243317788626882,
+                "interaction": -15693.24303465717
+            },
+            "diene": {
+                "distortion": 0.03096672327228589
+            },
+            "dienophile": {
+                "distortion": 0.07146645461398293
+            }
+        },
+        "35": {
+            "molecule": {
+                "total": -15693.127870301352,
+                "distortion": 0.11364561793288885,
+                "interaction": -15693.241515919286
+            },
+            "diene": {
+                "distortion": 0.03514247659040848
+            },
+            "dienophile": {
+                "distortion": 0.07850314134248038
+            }
+        },
+        "36": {
+            "molecule": {
+                "total": -15693.114594091941,
+                "distortion": 0.1269285026792204,
+                "interaction": -15693.24152259462
+            },
+            "diene": {
+                "distortion": 0.04010715023468947
+            },
+            "dienophile": {
+                "distortion": 0.08682135244453093
+            }
+        },
+        "37": {
+            "molecule": {
+                "total": -15693.100797943547,
+                "distortion": 0.14267812540310842,
+                "interaction": -15693.24347606895
+            },
+            "diene": {
+                "distortion": 0.046473174583297805
+            },
+            "dienophile": {
+                "distortion": 0.09620495081981062
+            }
+        },
+        "38": {
+            "molecule": {
+                "total": -15693.086481607468,
+                "distortion": 0.16102451417100383,
+                "interaction": -15693.24750612164
+            },
+            "diene": {
+                "distortion": 0.0539441434048058
+            },
+            "dienophile": {
+                "distortion": 0.10708037076619803
+            }
+        },
+        "39": {
+            "molecule": {
+                "total": -15693.071812357968,
+                "distortion": 0.18275086514131544,
+                "interaction": -15693.254563223109
+            },
+            "diene": {
+                "distortion": 0.0630399189194577
+            },
+            "dienophile": {
+                "distortion": 0.11971094622185774
+            }
+        },
+        "40": {
+            "molecule": {
+                "total": -15693.056793155381,
+                "distortion": 0.2082535742138134,
+                "interaction": -15693.265046729595
+            },
+            "diene": {
+                "distortion": 0.07422682910873846
+            },
+            "dienophile": {
+                "distortion": 0.13402674510507495
+            }
+        },
+        "41": {
+            "molecule": {
+                "total": -15693.042135218771,
+                "distortion": 0.23762517184150056,
+                "interaction": -15693.279760390613
+            },
+            "diene": {
+                "distortion": 0.08717372104365495
+            },
+            "dienophile": {
+                "distortion": 0.1504514507978456
+            }
+        },
+        "42": {
+            "molecule": {
+                "total": -15693.027769029997,
+                "distortion": 0.2711114711346454,
+                "interaction": -15693.298880501132
+            },
+            "diene": {
+                "distortion": 0.10205841540300753
+            },
+            "dienophile": {
+                "distortion": 0.16905305573163787
+            }
+        },
+        "43": {
+            "molecule": {
+                "total": -15693.014448069534,
+                "distortion": 0.30969384251966403,
+                "interaction": -15693.324141912053
+            },
+            "diene": {
+                "distortion": 0.11957374216035532
+            },
+            "dienophile": {
+                "distortion": 0.1901201003593087
+            }
+        },
+        "44": {
+            "molecule": {
+                "total": -15693.003207937145,
+                "distortion": 0.3543267798395391,
+                "interaction": -15693.357534716984
+            },
+            "diene": {
+                "distortion": 0.1397003298261552
+            },
+            "dienophile": {
+                "distortion": 0.21462645001338387
+            }
+        },
+        "45": {
+            "molecule": {
+                "total": -15692.994382529641,
+                "distortion": 0.40521439499934786,
+                "interaction": -15693.39959692464
+            },
+            "diene": {
+                "distortion": 0.1629925813358568
+            },
+            "dienophile": {
+                "distortion": 0.24222181366349105
+            }
+        },
+        "46": {
+            "molecule": {
+                "total": -15692.988721093945,
+                "distortion": 0.4629541096419416,
+                "interaction": -15693.451675203587
+            },
+            "diene": {
+                "distortion": 0.18965655595638964
+            },
+            "dienophile": {
+                "distortion": 0.273297553685552
+            }
+        },
+        "47": {
+            "molecule": {
+                "total": -15692.98644593595,
+                "distortion": 0.529210780723588,
+                "interaction": -15693.515656716674
+            },
+            "diene": {
+                "distortion": 0.22042893977959466
+            },
+            "dienophile": {
+                "distortion": 0.3087818409439933
+            }
+        },
+        "48": {
+            "molecule": {
+                "total": -15692.988067547521,
+                "distortion": 0.6036985291830206,
+                "interaction": -15693.591766076705
+            },
+            "diene": {
+                "distortion": 0.2551710949301196
+            },
+            "dienophile": {
+                "distortion": 0.348527434252901
+            }
+        },
+        "49": {
+            "molecule": {
+                "total": -15692.993124663306,
+                "distortion": 0.68778088370982,
+                "interaction": -15693.680905547015
+            },
+            "diene": {
+                "distortion": 0.2947287091665203
+            },
+            "dienophile": {
+                "distortion": 0.39305217454329977
+            }
+        },
+        "50": {
+            "molecule": {
+                "total": -15693.002363954567,
+                "distortion": 0.7838183492822282,
+                "interaction": -15693.78618230385
+            },
+            "diene": {
+                "distortion": 0.3402888596683624
+            },
+            "dienophile": {
+                "distortion": 0.44352948961386574
+            }
+        },
+        "51": {
+            "molecule": {
+                "total": -15693.014690723474,
+                "distortion": 0.8871991053947568,
+                "interaction": -15693.901889828869
+            },
+            "diene": {
+                "distortion": 0.38929455576908367
+            },
+            "dienophile": {
+                "distortion": 0.4979045496256731
+            }
+        },
+        "52": {
+            "molecule": {
+                "total": -15693.031392119872,
+                "distortion": 1.0027375678482713,
+                "interaction": -15694.03412968772
+            },
+            "diene": {
+                "distortion": 0.4444172705461824
+            },
+            "dienophile": {
+                "distortion": 0.5583202973020889
+            }
+        },
+        "53": {
+            "molecule": {
+                "total": -15693.052248589725,
+                "distortion": 1.1275007229705807,
+                "interaction": -15694.179749312696
+            },
+            "diene": {
+                "distortion": 0.503979966902989
+            },
+            "dienophile": {
+                "distortion": 0.6235207560675917
+            }
+        },
+        "54": {
+            "molecule": {
+                "total": -15693.076853238175,
+                "distortion": 1.2609385303057934,
+                "interaction": -15694.337791768481
+            },
+            "diene": {
+                "distortion": 0.5681430101394653
+            },
+            "dienophile": {
+                "distortion": 0.6927955201663281
+            }
+        },
+        "55": {
+            "molecule": {
+                "total": -15693.104681562874,
+                "distortion": 1.4017241572373678,
+                "interaction": -15694.506405720113
+            },
+            "diene": {
+                "distortion": 0.6354332109112875
+            },
+            "dienophile": {
+                "distortion": 0.7662909463260803
+            }
+        },
+        "56": {
+            "molecule": {
+                "total": -15693.13461409534,
+                "distortion": 1.548554178678387,
+                "interaction": -15694.683168274018
+            },
+            "diene": {
+                "distortion": 0.7056644338081242
+            },
+            "dienophile": {
+                "distortion": 0.8428897448702628
+            }
+        },
+        "57": {
+            "molecule": {
+                "total": -15693.166310301394,
+                "distortion": 1.7005140153523826,
+                "interaction": -15694.866824316747
+            },
+            "diene": {
+                "distortion": 0.7782329893198039
+            },
+            "dienophile": {
+                "distortion": 0.9222810260325787
+            }
+        },
+        "58": {
+            "molecule": {
+                "total": -15693.199751217322,
+                "distortion": 1.8566333270655377,
+                "interaction": -15695.056384544387
+            },
+            "diene": {
+                "distortion": 0.8525909132349625
+            },
+            "dienophile": {
+                "distortion": 1.0040424138305752
+            }
+        },
+        "59": {
+            "molecule": {
+                "total": -15693.234224922799,
+                "distortion": 2.0164228422972883,
+                "interaction": -15695.250647765097
+            },
+            "diene": {
+                "distortion": 0.9283292485870334
+            },
+            "dienophile": {
+                "distortion": 1.088093593710255
+            }
+        },
+        "60": {
+            "molecule": {
+                "total": -15693.269920739465,
+                "distortion": 2.17832234053094,
+                "interaction": -15695.448243079996
+            },
+            "diene": {
+                "distortion": 1.0047376872407767
+            },
+            "dienophile": {
+                "distortion": 1.1735846532901633
+            }
+        },
+        "61": {
+            "molecule": {
+                "total": -15693.306052849737,
+                "distortion": 2.3415621877793455,
+                "interaction": -15695.647615037517
+            },
+            "diene": {
+                "distortion": 1.0812507228674804
+            },
+            "dienophile": {
+                "distortion": 1.2603114649118652
+            }
+        },
+        "62": {
+            "molecule": {
+                "total": -15693.34219566423,
+                "distortion": 2.5051776780555883,
+                "interaction": -15695.847373342287
+            },
+            "diene": {
+                "distortion": 1.1572681720990659
+            },
+            "dienophile": {
+                "distortion": 1.3479095059565225
+            }
+        },
+        "63": {
+            "molecule": {
+                "total": -15693.37791721047,
+                "distortion": 2.667768843841259,
+                "interaction": -15696.04568605431
+            },
+            "diene": {
+                "distortion": 1.2323259209497337
+            },
+            "dienophile": {
+                "distortion": 1.435442922891525
+            }
+        },
+        "64": {
+            "molecule": {
+                "total": -15693.41326408264,
+                "distortion": 2.8288078410096205,
+                "interaction": -15696.242071923649
+            },
+            "diene": {
+                "distortion": 1.3058697201413452
+            },
+            "dienophile": {
+                "distortion": 1.5229381208682753
+            }
+        },
+        "65": {
+            "molecule": {
+                "total": -15693.447751543008,
+                "distortion": 2.985981875535799,
+                "interaction": -15696.433733418544
+            },
+            "diene": {
+                "distortion": 1.3764886299250065
+            },
+            "dienophile": {
+                "distortion": 1.6094932456107927
+            }
+        },
+        "66": {
+            "molecule": {
+                "total": -15693.48135099496,
+                "distortion": 3.138779165228698,
+                "interaction": -15696.620130160189
+            },
+            "diene": {
+                "distortion": 1.4442863257645513
+            },
+            "dienophile": {
+                "distortion": 1.6944928394641465
+            }
+        },
+        "67": {
+            "molecule": {
+                "total": -15693.514206572581,
+                "distortion": 3.2863551320415354,
+                "interaction": -15696.800561704622
+            },
+            "diene": {
+                "distortion": 1.508986296645162
+            },
+            "dienophile": {
+                "distortion": 1.7773688353963735
+            }
+        },
+        "68": {
+            "molecule": {
+                "total": -15693.546280212542,
+                "distortion": 3.4282699069362934,
+                "interaction": -15696.974550119477
+            },
+            "diene": {
+                "distortion": 1.5704893974925653
+            },
+            "dienophile": {
+                "distortion": 1.857780509443728
+            }
+        },
+        "69": {
+            "molecule": {
+                "total": -15693.577916976334,
+                "distortion": 3.5644766696077568,
+                "interaction": -15697.142393645941
+            },
+            "diene": {
+                "distortion": 1.6291640364725026
+            },
+            "dienophile": {
+                "distortion": 1.9353126331352541
+            }
+        },
+        "70": {
+            "molecule": {
+                "total": -15693.609288821643,
+                "distortion": 3.6956102200592795,
+                "interaction": -15697.304899041701
+            },
+            "diene": {
+                "distortion": 1.6853641184698063
+            },
+            "dienophile": {
+                "distortion": 2.0102461015894733
+            }
+        },
+        "71": {
+            "molecule": {
+                "total": -15693.641307990201,
+                "distortion": 3.8224119969463572,
+                "interaction": -15697.463719987147
+            },
+            "diene": {
+                "distortion": 1.7395366030305013
+            },
+            "dienophile": {
+                "distortion": 2.082875393915856
+            }
+        },
+        "72": {
+            "molecule": {
+                "total": -15693.674320847435,
+                "distortion": 3.9452855203771833,
+                "interaction": -15697.61960636781
+            },
+            "diene": {
+                "distortion": 1.792249606385667
+            },
+            "dienophile": {
+                "distortion": 2.1530359139915163
+            }
+        },
+        "73": {
+            "molecule": {
+                "total": -15693.708998949644,
+                "distortion": 4.064697873075602,
+                "interaction": -15697.773696822718
+            },
+            "diene": {
+                "distortion": 1.8437713487655856
+            },
+            "dienophile": {
+                "distortion": 2.2209265243100162
+            }
+        },
+        "74": {
+            "molecule": {
+                "total": -15693.74595902569,
+                "distortion": 4.181527141904553,
+                "interaction": -15697.927486167595
+            },
+            "diene": {
+                "distortion": 1.8944872564570687
+            },
+            "dienophile": {
+                "distortion": 2.2870398854474843
+            }
+        },
+        "75": {
+            "molecule": {
+                "total": -15693.78562933239,
+                "distortion": 4.295281855637768,
+                "interaction": -15698.080911188026
+            },
+            "diene": {
+                "distortion": 1.9441712699754135
+            },
+            "dienophile": {
+                "distortion": 2.3511105856623544
+            }
+        },
+        "76": {
+            "molecule": {
+                "total": -15693.827711485435,
+                "distortion": 4.406946718078871,
+                "interaction": -15698.234658203513
+            },
+            "diene": {
+                "distortion": 1.9933313439523772
+            },
+            "dienophile": {
+                "distortion": 2.4136153741264934
+            }
+        },
+        "77": {
+            "molecule": {
+                "total": -15693.871903920732,
+                "distortion": 4.516013927818676,
+                "interaction": -15698.387917848551
+            },
+            "diene": {
+                "distortion": 2.0419216204754775
+            },
+            "dienophile": {
+                "distortion": 2.4740923073431986
+            }
+        },
+        "78": {
+            "molecule": {
+                "total": -15693.918284418094,
+                "distortion": 4.623209936891726,
+                "interaction": -15698.541494354986
+            },
+            "diene": {
+                "distortion": 2.09029691475007
+            },
+            "dienophile": {
+                "distortion": 2.5329130221416563
+            }
+        },
+        "79": {
+            "molecule": {
+                "total": -15693.965976425676,
+                "distortion": 4.727405962377816,
+                "interaction": -15698.693382388054
+            },
+            "diene": {
+                "distortion": 2.1373807610543736
+            },
+            "dienophile": {
+                "distortion": 2.590025201323442
+            }
+        },
+        "80": {
+            "molecule": {
+                "total": -15694.015268650219,
+                "distortion": 4.828843890554708,
+                "interaction": -15698.844112540773
+            },
+            "diene": {
+                "distortion": 2.1834396708145505
+            },
+            "dienophile": {
+                "distortion": 2.6454042197401577
+            }
+        },
+        "81": {
+            "molecule": {
+                "total": -15694.065164803444,
+                "distortion": 4.927142344673484,
+                "interaction": -15698.992307148117
+            },
+            "diene": {
+                "distortion": 2.2284754351003357
+            },
+            "dienophile": {
+                "distortion": 2.6986669095731486
+            }
+        },
+        "82": {
+            "molecule": {
+                "total": -15694.115712843668,
+                "distortion": 5.022134568698675,
+                "interaction": -15699.137847412367
+            },
+            "diene": {
+                "distortion": 2.2724557237306726
+            },
+            "dienophile": {
+                "distortion": 2.7496788449680025
+            }
+        },
+        "83": {
+            "molecule": {
+                "total": -15694.165855712226,
+                "distortion": 5.112502428699372,
+                "interaction": -15699.278358140926
+            },
+            "diene": {
+                "distortion": 2.314291352584405
+            },
+            "dienophile": {
+                "distortion": 2.798211076114967
+            }
+        },
+        "84": {
+            "molecule": {
+                "total": -15694.214492075747,
+                "distortion": 5.197828944283174,
+                "interaction": -15699.41232102003
+            },
+            "diene": {
+                "distortion": 2.3540344970642764
+            },
+            "dienophile": {
+                "distortion": 2.8437944472188974
+            }
+        },
+        "85": {
+            "molecule": {
+                "total": -15694.261148653102,
+                "distortion": 5.276951460085911,
+                "interaction": -15699.538100113188
+            },
+            "diene": {
+                "distortion": 2.391015474733649
+            },
+            "dienophile": {
+                "distortion": 2.885935985352262
+            }
+        },
+        "86": {
+            "molecule": {
+                "total": -15694.30484080184,
+                "distortion": 5.348775736513744,
+                "interaction": -15699.653616538355
+            },
+            "diene": {
+                "distortion": 2.4245379719286575
+            },
+            "dienophile": {
+                "distortion": 2.9242377645850866
+            }
+        },
+        "87": {
+            "molecule": {
+                "total": -15694.344752569088,
+                "distortion": 5.412023777232207,
+                "interaction": -15699.75677634632
+            },
+            "diene": {
+                "distortion": 2.453797295112963
+            },
+            "dienophile": {
+                "distortion": 2.958226482119244
+            }
+        },
+        "88": {
+            "molecule": {
+                "total": -15694.38038513529,
+                "distortion": 5.465244126923608,
+                "interaction": -15699.845629262214
+            },
+            "diene": {
+                "distortion": 2.4779948190807772
+            },
+            "dienophile": {
+                "distortion": 2.9872493078428306
+            }
+        },
+        "89": {
+            "molecule": {
+                "total": -15694.411697131967,
+                "distortion": 5.508191509243261,
+                "interaction": -15699.91988864121
+            },
+            "diene": {
+                "distortion": 2.4970063853343163
+            },
+            "dienophile": {
+                "distortion": 3.0111851239089447
+            }
+        },
+        "90": {
+            "molecule": {
+                "total": -15694.438775206827,
+                "distortion": 5.540505378189664,
+                "interaction": -15699.979280585016
+            },
+            "diene": {
+                "distortion": 2.5101750406738574
+            },
+            "dienophile": {
+                "distortion": 3.0303303375158066
+            }
+        },
+        "91": {
+            "molecule": {
+                "total": -15694.461917080438,
+                "distortion": 5.563267098053075,
+                "interaction": -15700.025184178492
+            },
+            "diene": {
+                "distortion": 2.5182609336989117
+            },
+            "dienophile": {
+                "distortion": 3.045006164354163
+            }
+        },
+        "92": {
+            "molecule": {
+                "total": -15694.481293148603,
+                "distortion": 5.57969876424977,
+                "interaction": -15700.060991912853
+            },
+            "diene": {
+                "distortion": 2.522366420558683
+            },
+            "dienophile": {
+                "distortion": 3.057332343691087
+            }
+        },
+        "93": {
+            "molecule": {
+                "total": -15694.498004355812,
+                "distortion": 5.5912287896035195,
+                "interaction": -15700.089233145416
+            },
+            "diene": {
+                "distortion": 2.523562058033349
+            },
+            "dienophile": {
+                "distortion": 3.0676667315701707
+            }
+        },
+        "94": {
+            "molecule": {
+                "total": -15694.511827642595,
+                "distortion": 5.6011213665151445,
+                "interaction": -15700.11294900911
+            },
+            "diene": {
+                "distortion": 2.5234385524909158
+            },
+            "dienophile": {
+                "distortion": 3.0776828140242287
+            }
+        },
+        "95": {
+            "molecule": {
+                "total": -15694.52347373297,
+                "distortion": 5.610375896214464,
+                "interaction": -15700.133849629185
+            },
+            "diene": {
+                "distortion": 2.522721398732756
+            },
+            "dienophile": {
+                "distortion": 3.087654497481708
+            }
+        },
+        "96": {
+            "molecule": {
+                "total": -15694.533438301054,
+                "distortion": 5.620042829054,
+                "interaction": -15700.153481130108
+            },
+            "diene": {
+                "distortion": 2.52227278951068
+            },
+            "dienophile": {
+                "distortion": 3.0977700395433203
+            }
+        },
+        "97": {
+            "molecule": {
+                "total": -15694.541945709676,
+                "distortion": 5.630783391991827,
+                "interaction": -15700.172729101669
+            },
+            "diene": {
+                "distortion": 2.5221608249357814
+            },
+            "dienophile": {
+                "distortion": 3.1086225670560452
+            }
+        },
+        "98": {
+            "molecule": {
+                "total": -15694.549425312964,
+                "distortion": 5.642182615833917,
+                "interaction": -15700.191607928798
+            },
+            "diene": {
+                "distortion": 2.5225245634046587
+            },
+            "dienophile": {
+                "distortion": 3.1196580524292585
+            }
+        },
+        "99": {
+            "molecule": {
+                "total": -15694.5558169789,
+                "distortion": 5.653927306679179,
+                "interaction": -15700.20974428558
+            },
+            "diene": {
+                "distortion": 2.523271675921933
+            },
+            "dienophile": {
+                "distortion": 3.1306556307572464
+            }
+        },
+        "100": {
+            "molecule": {
+                "total": -15694.561621517032,
+                "distortion": 5.665318560721971,
+                "interaction": -15700.226940077755
+            },
+            "diene": {
+                "distortion": 2.5239732682439353
+            },
+            "dienophile": {
+                "distortion": 3.141345292478036
+            }
+        }
+    }
+}

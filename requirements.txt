@@ -1,0 +1,5 @@
+matplotlib
+numpy
+requests
+ase>=3.22.1
+torch==2.0.0
