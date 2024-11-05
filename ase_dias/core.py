@@ -157,6 +157,8 @@ def potential_energy(calc:ase.calculators.calculator, fragment:ase.Atoms, charge
     'charge':charge
     }
   if use_spin: _calc_kwargs['spin'] = spin
+  _calc_kwargs.pop('use_spin', None)
+  
   Calculator = calc(**_calc_kwargs)
   fragment.calc = Calculator
   return fragment.get_potential_energy()
@@ -186,6 +188,7 @@ def optimize(calc:ase.calculators.calculator, fragment:ase.Atoms, charge:int, fm
     'charge':charge
     }
   if use_spin: _calc_kwargs['spin'] = spin
+  _calc_kwargs.pop('use_spin', None)
 
   Calculator = calc(**_calc_kwargs)
   fragment.calc = Calculator
