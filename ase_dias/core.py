@@ -1,5 +1,8 @@
-import ase.calculators
-import ase.calculators.calculator
+# import ase.calculators
+# import ase.calculators.calculator
+
+from typing import Callable
+from ase.calculators.calculator import Calculator
 import torch
 from ase import Atoms
 from ase_dias.aimnet2ase import AIMNet2Calculator
@@ -132,7 +135,7 @@ def load_aimnet2(model:str="wb97m-d3"): # TO BE CHANGE (docs string)
     raise ValueError(f"'{model}' <-- is not a supported model. Check available model names via `ase_dias.models()`")
 
 
-def potential_energy(calc:ase.calculators.calculator, fragment:ase.Atoms, charge:int, **calc_kwargs)->float:
+def potential_energy(calc_wrapper:Callable[..., Calculator], fragment:ase.Atoms, charge:int, **calc_kwargs)->float:
   """
   Description
   -----------
@@ -159,12 +162,12 @@ def potential_energy(calc:ase.calculators.calculator, fragment:ase.Atoms, charge
   if use_spin: _calc_kwargs['spin'] = spin
   _calc_kwargs.pop('use_spin', None)
   
-  Calculator = calc(**_calc_kwargs)
-  fragment.calc = Calculator
+  calc = calc_wrapper(**_calc_kwargs)
+  fragment.calc = calc
   return fragment.get_potential_energy()
 
 
-def optimize(calc:ase.calculators.calculator, fragment:ase.Atoms, charge:int, fmax:float=0.05, steps=500, clear_log=False, **calc_kwargs)->str:
+def optimize(calc_wrapper:Callable[..., Calculator], fragment:ase.Atoms, charge:int, preoptimizer_wrapper:Callable[..., Calculator]=None, fmax:float=0.05, steps=500, clear_log=False, **calc_kwargs)->str:
   """
   Description
   -----------
@@ -190,8 +193,15 @@ def optimize(calc:ase.calculators.calculator, fragment:ase.Atoms, charge:int, fm
   if use_spin: _calc_kwargs['spin'] = spin
   _calc_kwargs.pop('use_spin', None)
 
-  Calculator = calc(**_calc_kwargs)
-  fragment.calc = Calculator
+  # preoptimizaion
+  if preoptimizer_wrapper:
+    preopt_calc = preoptimizer_wrapper(**_calc_kwargs)
+    fragment.calc = preopt_calc
+    preopt = BFGS(atoms=fragment)
+    preopt.run(fmax=fmax, steps=steps)
+
+  calc = calc_wrapper(**_calc_kwargs)
+  fragment.calc = calc
 
   optimize = BFGS(atoms=fragment)
   optimize.run(fmax=fmax, steps=steps)
@@ -343,7 +353,8 @@ def fragmentBuilder(xyzString:str, indice:list)->ase.Atoms:
 def DIAS(
     xyzString:str, 
     fragments_params: list | dict, 
-    calc:ase.calculators.calculator, 
+    calc_wrapper:Callable[..., Calculator], 
+    preoptimizer_wrapper:Callable[..., Calculator]=None,
     clear_log=True, 
     **calc_kwargs
     )->dict:
@@ -369,8 +380,12 @@ def DIAS(
   net_charge = sum(tuple(map(lambda frag : frag[0], fragments)))
 
   # molecule total energy
-  # total_energy = potential_energy(molecule, charge=net_charge, model=model)
-  total_energy = potential_energy(calc=calc, fragment=molecule, charge=net_charge, **calc_kwargs)
+  total_energy = potential_energy(
+    calc_wrapper=calc_wrapper, 
+    fragment=molecule, 
+    charge=net_charge, 
+    **calc_kwargs
+    )
   DIAS_result["molecule"]["total"] = total_energy
 
   # distortion energy
@@ -378,14 +393,10 @@ def DIAS(
   for name, fragment in zip(fragment_names, fragments):
     frag_chrg, frag_indices = fragment
     frag:ase.Atoms = fragmentBuilder(xyzString, frag_indices)
-    # pre_optimized_Energy = potential_energy(fragment=frag, charge=frag_chrg, model=model)
-    # print(f"\nOptimizer : optimizing {name}")
-    # optimize(fragment=frag, charge=frag_chrg, model=model, clear_log=False)
-    # optimized_Energy = potential_energy(fragment=frag, charge=frag_chrg, model=model)
-    pre_optimized_Energy = potential_energy(calc=calc, fragment=frag, charge=frag_chrg, **calc_kwargs)
+    pre_optimized_Energy = potential_energy(calc_wrapper=calc_wrapper, fragment=frag, charge=frag_chrg, **calc_kwargs)
     print(f"\nOptimizer : optimizing {name}")
-    optimize(calc=calc, fragment=frag, charge=frag_chrg, clear_log=False, **calc_kwargs)
-    optimized_Energy = potential_energy(calc=calc, fragment=frag, charge=frag_chrg, **calc_kwargs)
+    optimize(calc_wrapper=calc_wrapper, preoptimizer_wrapper=preoptimizer_wrapper, fragment=frag, charge=frag_chrg, clear_log=False, **calc_kwargs)
+    optimized_Energy = potential_energy(calc_wrapper=calc_wrapper, fragment=frag, charge=frag_chrg, **calc_kwargs)
 
     fragDistortion = pre_optimized_Energy - optimized_Energy # eV unit
     DIAS_result[name] = {"distortion" : fragDistortion}
@@ -486,10 +497,11 @@ def DIASparser(
 
 
 def trajDIAS(
-    calc:ase.calculators.calculator, 
+    calc_wrapper:Callable[..., Calculator], 
     trajFile:str, 
     fragments_params: list|dict, 
-    resultSavePath:str="./result.json", 
+    preoptimizer_wrapper:Callable[..., Calculator]=None,
+    resultSavePath:str="./result.json",
     save_kws:dict={}, 
     **calc_kwargs
     ):
@@ -516,7 +528,8 @@ def trajDIAS(
     trajDIASresult[IRC_idx] = DIAS(
       xyzString=xyzString, 
       fragments_params=fragments_params, 
-      calc=calc, 
+      calc_wrapper=calc_wrapper, 
+      preoptimizer_wrapper=preoptimizer_wrapper,
       clear_log=True, 
       **calc_kwargs
       )
@@ -668,8 +681,9 @@ def xaxis_formatter(trajFile:str, geo_param:dict):
 
 
 def dias_run(
-    calc:ase.calculators.calculator, 
+    calc_wrapper:Callable[..., Calculator], 
     trajFile:str, fragments_params: list | dict, 
+    preoptimizer_wrapper:Callable[..., Calculator]=None,
     mode:str="calculation", 
     DIAresultPath:str="./result.json", 
     axis_type:str="irc", 
@@ -728,7 +742,8 @@ def dias_run(
       print(f"\033[91m{warning_msg}\033[0m")
     # run DIAS
     DIASresult = trajDIAS(
-      calc=calc, 
+      calc_wrapper=calc_wrapper, 
+      preoptimizer_wrapper=preoptimizer_wrapper,
       trajFile=trajFile, 
       fragments_params=fragments_params, 
       resultSavePath=resultSavePath, 
