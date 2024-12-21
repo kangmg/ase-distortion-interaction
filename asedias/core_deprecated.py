@@ -5,7 +5,7 @@ from typing import Callable
 from ase.calculators.calculator import Calculator
 import torch
 from ase import Atoms
-from ase_dias.aimnet2ase import AIMNet2Calculator
+from asedias.aimnet2ase import AIMNet2Calculator
 import ase
 from ase.optimize import BFGS
 import os
@@ -16,7 +16,7 @@ import ase.io
 from io import StringIO
 from os.path import isfile, dirname, basename
 import matplotlib.pyplot as plt
-from ase_dias.utilities import is_ipython, progress_bar, husl_palette, markers_, json_dump, draw_xyz
+from asedias.utils import is_ipython, progress_bar, husl_palette, markers_, json_dump, draw_xyz
 from importlib.util import find_spec
 import subprocess
 import warnings

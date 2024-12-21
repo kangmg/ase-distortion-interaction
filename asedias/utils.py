@@ -1,9 +1,6 @@
 from datetime import datetime
 import json
 from os.path import basename, isfile
-from rdkit import Chem
-from rdkit.Chem import rdDetermineBonds
-import py3Dmol
 import re
 
 def progress_bar(total, current)->None:
@@ -164,57 +161,5 @@ def json_dump(trajDIASresult:dict, trajFile:str, resultSavePath:str="./result.js
       "result"          : trajDIASresult
         }, file, indent=4, ensure_ascii=False)
     
-
-def draw_xyz(trajFile:str, charge:int=0, idx:int=0)->py3Dmol.view:
-  """
-  Description
-  -----------
-  Visualize the molecule with atomic indice using py3Dmol.
-
-  Parameters
-  ----------
-    - trajFile (str) : The trajectory file path or trajectory format string to read.
-    - charge (int) : The charge of the whole system.
-    - idx (int) : IRC index in trajectory file. Idx starts with 0
-
-  Returns
-  -------
-    - viewer(py3Dmol.view) : The py3Dmol viewer object.
-  """
-  # load idx - xyz string
-  if isfile(trajFile):
-    with open(trajFile, "r") as file:
-      traj = file.read()
-  else:
-    traj = trajFile
-
-  # Split the trajectory file into multiple XYZ format strings
-  pattern = re.compile("(\s?\d+\n.*\n(\s*[a-zA-Z]{1,2}(\s+-?\d+.\d+){3,3}\n?)+)")
-  matched = pattern.findall(traj)
-
-  molecule_string = tuple(map(lambda groups : groups[0], matched))[idx]
-
-  # convert xyz string to mol block
-  raw_mol = Chem.MolFromXYZBlock(molecule_string)
-  rdDetermineBonds.DetermineBonds(raw_mol,charge=charge) # bond determine
-  block_mol = Chem.MolToMolBlock(raw_mol)
-
-  # py3Dmol viewer
-  p = py3Dmol.view(width=550,height=550)
-  p.removeAllModels()
-  p.addModel(block_mol,'sdf')
-  p.setStyle({'stick':{}})
-  p.setBackgroundColor('0xeeeeee')
-
-  # add index label
-  for atom in raw_mol.GetAtoms():
-      idx = atom.GetIdx()
-      symbol = atom.GetSymbol()
-      pos = raw_mol.GetConformer().GetAtomPosition(idx)
-      x, y, z = pos.x, pos.y, pos.z
-      label_text = '{:>2}'.format(idx + 1)
-      p.addLabel(label_text, {'position': {'x': x, 'y': y, 'z': z}, 'fontSize': 14, 'backgroundColor':"black","fontColor":"white"})
-  p.zoomTo()
-  return p.show()
 
 

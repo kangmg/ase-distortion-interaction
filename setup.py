@@ -1,11 +1,11 @@
 from setuptools import setup, find_namespace_packages
 
 setup(
-    name='ase-dias',
+    name='asedias',
     version='0.0.1',
     author='Kang mingi',
     author_email='kangmg@korea.ac.kr',
-    description='An ASE-compatible plugin for distortion interaction analysis.',
+    description='An ASE-compatible tool for distortion interaction analysis.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',  
     url='https://github.com/kangmg/ase-distortion-interaction',
