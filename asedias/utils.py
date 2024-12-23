@@ -178,28 +178,28 @@ def markers_(lens:int)->list:
       raise ValueError(f"{lens} is not in [2, 9], 2 =< lens =< 9")
 
 
-def json_dump(trajDIASresult:dict, trajFile:str, resultSavePath:str="./result.json", title=None, note=None)->None:
-  """
-  Description
-  -----------
-  Dump the DIAS results into a JSON file.
+# def json_dump(trajDIASresult:dict, trajFile:str, resultSavePath:str="./result.json", title=None, note=None)->None:
+#   """
+#   Description
+#   -----------
+#   Dump the DIAS results into a JSON file.
 
-  Parameters
-  ----------
-    - trajDIASresult (dict): The DIAS results to be dumped.
-    - trajFile (str): The path to the trajectory file.
-    - resultSavePath (str, optional): The path to save the JSON file. Default is "./result.json".
-    - title (str, optional): Title for the JSON file. Default is None.
-    - note (str, optional): Additional note for the JSON file. Default is None.
-  """
-  with open(resultSavePath, "w") as file:
-    json.dump({
-      "title"           : title if title else "",
-      "note"            : note if note else "",
-      "trajectory_file" : basename(trajFile) if isfile(trajFile) else "",
-      "submission_date" : str(datetime.now().strftime("%Y-%m-%d %H:%M")),
-      "result"          : trajDIASresult
-        }, file, indent=4, ensure_ascii=False)
+#   Parameters
+#   ----------
+#     - trajDIASresult (dict): The DIAS results to be dumped.
+#     - trajFile (str): The path to the trajectory file.
+#     - resultSavePath (str, optional): The path to save the JSON file. Default is "./result.json".
+#     - title (str, optional): Title for the JSON file. Default is None.
+#     - note (str, optional): Additional note for the JSON file. Default is None.
+#   """
+#   with open(resultSavePath, "w") as file:
+#     json.dump({
+#       "title"           : title if title else "",
+#       "note"            : note if note else "",
+#       "trajectory_file" : basename(trajFile) if isfile(trajFile) else "",
+#       "submission_date" : str(datetime.now().strftime("%Y-%m-%d %H:%M")),
+#       "result"          : trajDIASresult
+#         }, file, indent=4, ensure_ascii=False)
     
 
 
