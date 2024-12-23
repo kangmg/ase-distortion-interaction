@@ -9,9 +9,17 @@ class System:
     """
     asedias System class
     """
-    def __init__(self, images:Union[list[ase.Atoms], ase.Trajectory], frag_indice:list, frag_charges:list[int], frag_spins:list[int]=None, frag_names:list[str]=None):
+    def __init__(self, images:list[ase.Atoms], frag_indice:Union[list, np.ndarray], frag_charges:list[int], frag_spins:list[int]=None, frag_names:list[str]=None):
+        
+        # convert to list if it is np.ndarray
+        frag_indice = list(
+            indice.tolist() if isinstance(indice, np.ndarray) else indice
+            for indice in frag_indice
+        )
+
         self.images = images
         self.frag_charges = frag_charges
+        self.frag_spins = frag_spins
         self.frag_indice = frag_indice # start with 0
         
         self.n_frags = len(frag_charges)
@@ -33,9 +41,20 @@ class System:
 
 
         self.engine = None
-
-    def iterable_system(self):
+    
+    def iterator(self):
+        """
+        Generator to yield system image and fragment information
+        """
         for image in self.images:
+            yield {
+                'molecule': image,
+                'frag_indice': self.frag_indice,
+                'frag_charges': self.frag_charges,
+                'frag_spins': self.frag_spins,
+                'frag_names': self.frag_names
+                }
+
 
 
 
@@ -70,12 +89,13 @@ class ParameterManager:
 
     optimizer = BFGS # FIRE, LBFGS
 
-    calc_fmax = 0.5
-    calc_maxiter = 50
+    calc_fmax = 0.05
+    calc_maxiter = 100
 
-    preoptimizer_fmax = 0.3
-    preoptimizer_maxiter = 200
+    preoptimizer_fmax = 0.03
+    preoptimizer_maxiter = 300
     
+    clear_logging = True
   
     @classmethod
     def default_parameters(cls):
@@ -98,5 +118,5 @@ class aseDIAS:
     """
     
     """
-    def __init__(self):
+    def __init__(self, use_spin:bool=False):
         pass
