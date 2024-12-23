@@ -2,6 +2,43 @@ from datetime import datetime
 import json
 from os.path import basename, isfile
 import re
+import ase
+from io import StringIO
+
+
+def read_traj(trajFile:str, returnString=False)->list[ase.Atoms|str]: 
+  """
+  Description
+  -----------
+  Read trajectory data from a file or a string in XYZ format. If a file path is provided, it reads the content of the file. If a string is provided, it assumes the string contains trajectory data in XYZ format.
+
+  Parameters
+  ----------
+    - trajFile (str) : The trajectory file path or trajectory format string to read.
+    - returnString (bool) : Whether to return XYZ format strings. If false, returns ase.Atoms objects. Default is False.
+
+  Returns
+  -------
+    - ase.Atoms objects(list)  <- if returnString == Fasle
+    - xyz format strings(list) <- if returnString == True    
+  """
+  if isfile(trajFile):
+    with open(trajFile, "r") as file:
+      traj = file.read()
+  else:
+    traj = trajFile
+
+  # Split the trajectory file into multiple XYZ format strings
+  pattern = re.compile("(\s?\d+\n.*\n(\s*[a-zA-Z]{1,2}(\s+-?\d+.\d+){3,3}\n?)+)")
+  matched = pattern.findall(traj)
+
+  xyzStringTuple = list(map(lambda groups : groups[0], matched))
+  if returnString:
+    return xyzStringTuple
+  else:
+    aseAtomsTuple = list(map(lambda xyzString : ase.io.read(StringIO(xyzString), format="xyz"), xyzStringTuple))
+    return aseAtomsTuple
+  
 
 def progress_bar(total, current)->None:
   """
@@ -26,12 +63,14 @@ def progress_bar(total, current)->None:
   progress_bar_string = "\033[34mProcessing . . .  \n  {}%  |{}>{}|  {} / {}\033[0m".format(percent, num_progress_bar * "=", num_redidual_bar * " ", current, total)
   print(progress_bar_string)
 
+
 def is_ipython():
   try:
     __IPYTHON__
     return True
   except NameError:
     return False
+
 
 def husl_palette(pal_len:int)->list:
   """
@@ -102,6 +141,7 @@ def husl_palette(pal_len:int)->list:
                (0.9614880299080136, 0.3909885385134758, 0.8298287106954371)]
     case _:
       raise ValueError(f"{pal_len} is not in [2, 9], 2 =< pal_len =< 9")
+
 
 def markers_(lens:int)->list:
   """

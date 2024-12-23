@@ -210,7 +210,7 @@ def optimize(calc_wrapper:Callable[..., Calculator], fragment:ase.Atoms, charge:
     clear_output(wait=True)
   #return fragment
 
-def read_traj(trajFile:str, returnString=False)->tuple[ase.Atoms|str]:
+def read_traj(trajFile:str, returnString=False)->tuple[ase.Atoms|str]: 
   """
   Description
   -----------
