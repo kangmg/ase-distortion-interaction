@@ -13,7 +13,11 @@ class System:
     """
     asedias System class
     """
-    def __init__(self, frag_indice:Union[list, np.ndarray], frag_charges:list[int], frag_spins:list[int]=None, system_charge:int=None, system_spin:int=None, images:list[ase.Atoms]=None, filepath:str=None, frag_names:list[str]=None):
+    def __init__(self, frag_indices:Union[list, np.ndarray], frag_charges:list[int], 
+                 frag_spins:list[int]=None, system_charge:int=None, system_spin:int=None, 
+                 images:list[ase.Atoms]=None, filepath:str=None, frag_names:list[str]=None, 
+                 constraints:Union[list, np.ndarray]=None
+                 ):
         """
         
         Parameters
@@ -31,15 +35,23 @@ class System:
             assert images, "images are empty"
 
         # convert to list if it is np.ndarray
-        frag_indice = list(
-            indice.tolist() if isinstance(indice, np.ndarray) else indice
-            for indice in frag_indice
+        frag_indices = list(
+            indices.tolist() if isinstance(indices, np.ndarray) else indices
+            for indices in frag_indices
         )
+        constraints = list(
+            indices.tolist() if isinstance(indices, np.ndarray) else indices
+            for indices in constraints
+        )
+
+        # validate parameters
+        assert list(len(frag) for frag in frag_charges) == list(len(frag) for frag in frag_indices), 'shape mismatch'
+        assert len(images[0]) == len(set(sum(frag_indices, []))), 'incomplete indices list'
 
         self.images = images
         self.frag_charges = frag_charges
         self.frag_spins = frag_spins
-        self.frag_indice = frag_indice # start with 0
+        self.frag_indices = frag_indices # start with 0
         
         self.n_frags = len(frag_charges)
         self.n_images = len(images)
@@ -48,14 +60,6 @@ class System:
             system_charge = sum(frag_charges)
         self.system_charge = system_charge
         self.system_spin = system_spin
-        # if not system_spin:
-        #     warnings.warn("Spin is not specified. Spin estimated by number of electrons in the molecule.", category=UserWarning)
-        #     total_e = sum(atom.number for atom in self.images[0]) - self.system_charge
-        #     self.system_spin = 0 if total_e % 2 == 0 else 1
-
-        # validate parameters
-        assert list(len(frag) for frag in frag_charges) == list(len(frag) for frag in frag_indice), 'shape mismatch'
-        assert len(self.images[0]) == len(set(sum(frag_indice, []))), 'incomplete indice list'
 
         # fragment name
         if not self.frag_names:
@@ -67,9 +71,24 @@ class System:
             assert len(frag_names) == self.n_frags, "len(frag_names) must be same with n_frags"
             self.frag_names = frag_names 
 
+        if constraints:
+            # divide constraints
+            _fragment_constraints = list(list() for _ in self.frag_indices)
+
+            for constraint_idx in constraints:
+                for frag_idx, frag_indice in enumerate(self.frag_indices):
+                    if constraint_idx in frag_indice: 
+                        _fragment_constraints[frag_idx].append(constraint_idx)
+                        break
+            self.frag_constraints = _fragment_constraints
+        else:
+            self.frag_constraints = None
 
         self.Engine = None
     
+    # TODO 
+    # apply constraint to optimize function
+    # include constraint to interator
     def iterator(self):
         """
         Generator to yield system image and fragment information
@@ -79,7 +98,7 @@ class System:
                 'molecule': image,
                 'system_spin': self.system_spin,
                 'system_charge': self.system_charge,
-                'frag_indice': self.frag_indice,
+                'frag_indices': self.frag_indices,
                 'frag_charges': self.frag_charges,
                 'frag_spins': self.frag_spins,
                 'frag_names': self.frag_names
@@ -159,7 +178,7 @@ class aseDIAS:
             if self.system.system_spin:
                 warnings.warn("frag_spins is not specified. Spin estimated by number of electrons in the fragments.", category=UserWarning)
                 frag_atoms = list(
-                    self.system.images[0][index] for index in self.system.frag_indice
+                    self.system.images[0][index] for index in self.system.frag_indices
                 )
                 _frag_spins = list()
                 for frag, charge in zip(frag_atoms, self.system.frag_charges):

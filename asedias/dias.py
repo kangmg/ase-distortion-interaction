@@ -87,6 +87,53 @@ def IAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
     -------
       - DIASresult(dict) : A json containing single point DIAS results.
     """
+    # dummy result dict
+    DIASresult = dict()
+    DIASresult['molecule'] = dict()
+    DIASresult["molecule"]["distortion"] = None
+
+    _molecule = image['molecule']
+
+    # total energy of molecule
+    total_energy = potential_energy(
+       calc_wrapper=engine.calc_wrapper, 
+       atoms=_molecule, 
+       charge=image['system_charge'], 
+       spin=image['system_spin'],
+       use_spin=use_spin
+    )
+    DIASresult["molecule"]["total"] = total_energy
+
+    # interaction energy
+    sum_fragment = 0
+    frag_container = zip(image['frag_indices'], image['frag_charges'], image['frag_spins'], image['frag_names'])
+    for frag_index, frag_charge, frag_spin, frag_name in frag_container:
+        # dummy result
+        DIASresult[frag_name] = dict()
+        DIASresult[frag_name]['distortion'] = None
+        
+        frag_atoms = _molecule[frag_index]
+
+        fragment_energy = potential_energy(
+           calc_wrapper=engine.calc_wrapper, 
+           atoms=frag_atoms, 
+           charge=frag_charge,
+           spin=frag_spin,
+           use_spin=use_spin
+           )
+        
+        sum_fragment += fragment_energy
+
+    # interaction energy
+    total_interaction = total_energy - sum_fragment
+    DIASresult["molecule"]["interaction"] = total_interaction
+    DIASresult["success"] = True
+
+    # clear logging
+    if is_ipython() and ParameterManager.clear_logging:
+        clear_output(wait=True)
+
+    return DIASresult
 
 
 def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
@@ -100,7 +147,7 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
     -------
       - DIASresult(dict) : A json containing single point DIAS results.
     """
-    # black result dict
+    # blank result dict
     DIASresult = dict()
     DIASresult['molecule'] = dict()
 
@@ -118,11 +165,12 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
 
     # distortion energy
     total_distortion = 0
-    frag_container = zip(image['frag_indice'], image['frag_charges'], image['frag_spins'], image['frag_names'])
+    frag_container = zip(image['frag_indices'], image['frag_charges'], image['frag_spins'], image['frag_names'])
+    frag_opt_success_list = list()
     for frag_index, frag_charge, frag_spin, frag_name in frag_container:
         frag_atoms = _molecule[frag_index]
         # preopt energy
-        pre_optimized_Energy = potential_energy(
+        pre_optimized_energy = potential_energy(
            calc_wrapper=engine.calc_wrapper, 
            atoms=frag_atoms, 
            charge=frag_charge, 
@@ -138,22 +186,25 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
            spin=frag_spin,
            use_spin=use_spin
            )
-        DIASresult['opt_success'] = opt_success
-        optimized_Energy = potential_energy(
+        frag_opt_success_list.append(opt_success)
+        optimized_energy = potential_energy(
            calc_wrapper=engine.calc_wrapper, 
            atoms=frag_atoms, 
            charge=frag_charge,
            spin=frag_spin,
            use_spin=use_spin
            )
-        fragDistortion = pre_optimized_Energy - optimized_Energy # eV unit
-        DIASresult[frag_name] = {"distortion" : fragDistortion}
+        fragDistortion = pre_optimized_energy - optimized_energy # eV unit
+        DIASresult[frag_name] = dict()
+        DIASresult[frag_name]['distortion'] = fragDistortion
+        DIASresult[frag_name]['opt_success'] = opt_success
         total_distortion += fragDistortion
     DIASresult["molecule"]["distortion"] = total_distortion
 
     # interaction energy
     total_interaction = total_energy - total_distortion
     DIASresult["molecule"]["interaction"] = total_interaction
+    DIASresult['success'] = all(frag_opt_success_list)
 
     # clear logging
     if is_ipython() and ParameterManager.clear_logging:
@@ -170,7 +221,7 @@ def trajDIAS(
     trajDIASresult:dict
     ):
     """
-    This function performs DIAS calculations for each IRC point in a trajectory file.
+    This function performs DIAS(or IAS) calculations for each IRC point in a trajectory file.
 
     Parameters
     ----------
@@ -182,14 +233,16 @@ def trajDIAS(
     """
     NumImages = sum(1 for _ in images)
     success_list = list()
+    if ParameterManager.interaction_only:
+        _analysis_ftn = IAS
+    else: _analysis_ftn = DIAS
+
     # iterate DIAS calculation for each image
     for image_idx, image in enumerate(images):
         progress_bar(NumImages, image_idx)
         # pass if already normally calculated
-        if trajDIASresult.get(image_idx) and isinstance(trajDIASresult, dict):
-            if trajDIASresult[image_idx].get('opt_success'):
-                continue
-        DIASresult = DIAS(
+        if trajDIASresult[image_idx].get('success'): continue
+        DIASresult = _analysis_ftn(
             image=image,
             engine=engine
             use_spin=use_spin
