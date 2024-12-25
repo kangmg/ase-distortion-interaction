@@ -64,20 +64,35 @@ def optimize(calc_wrapper:Callable[..., Calculator],
         atoms.calc = preopt_calc
         preopt = optimizer(atoms=atoms)
         preopt_status = preopt.run(fmax=preopt_fmax, steps=preopt_maxiter)
-        if not preopt_status: warnings.warn("Preoptimization not converged. Use a higher `calc_maxiter` or a reduced `calc_fmax` threshold.", category=UserWarning)
+        if not preopt_status: warnings.warn("Preoptimization not converged. Use a higher `preopt_maxiter` or a reduced `preopt_fmax` threshold.", category=UserWarning)
 
     # optimization
     calc = calc_wrapper(**_calc_kwargs)
     atoms.calc = calc
     opt = optimizer(atoms=atoms)
-    opt_status = opt.run(fmax=calc_fmax, steps=calc_maxiter)
-    if not opt_status: warnings.warn("Optimization not converged. Use a higher `opt_maxiter` or a reduced `preopt_fmax` threshold.", category=UserWarning)
+    opt_success = opt.run(fmax=calc_fmax, steps=calc_maxiter)
+    if not opt_success: warnings.warn("Optimization not converged. Use a higher `calc_maxiter` or a reduced `calc_fmax` threshold.", category=UserWarning)
+
+    return opt_success
 
 
+def IAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
+    """
+    Single Point interaction analysis(IAS) calculation
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+      - DIASresult(dict) : A json containing single point DIAS results.
+    """
 
 
 def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
     """
+    Single Point distortion interaction analysis(DIAS) calculation
+
     Parameters
     ----------
 
@@ -86,8 +101,8 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
       - DIASresult(dict) : A json containing single point DIAS results.
     """
     # black result dict
-    DIAS_result = dict()
-    DIAS_result['molecule'] = dict()
+    DIASresult = dict()
+    DIASresult['molecule'] = dict()
 
     _molecule = image['molecule']
 
@@ -99,7 +114,7 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
        spin=image['system_spin'],
        use_spin=use_spin
     )
-    DIAS_result["molecule"]["total"] = total_energy
+    DIASresult["molecule"]["total"] = total_energy
 
     # distortion energy
     total_distortion = 0
@@ -115,7 +130,7 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
            use_spin=use_spin
            )
         print(f"\nOptimizer : optimizing {frag_name}")
-        optimize(
+        opt_success = optimize(
            calc_wrapper=engine.calc_wrapper, 
            preoptimizer_wrapper=engine.preoptimizer_wrapper, 
            atoms=frag_atoms, 
@@ -123,6 +138,7 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
            spin=frag_spin,
            use_spin=use_spin
            )
+        DIASresult['opt_success'] = opt_success
         optimized_Energy = potential_energy(
            calc_wrapper=engine.calc_wrapper, 
            atoms=frag_atoms, 
@@ -131,29 +147,27 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
            use_spin=use_spin
            )
         fragDistortion = pre_optimized_Energy - optimized_Energy # eV unit
-        DIAS_result[frag_name] = {"distortion" : fragDistortion}
+        DIASresult[frag_name] = {"distortion" : fragDistortion}
         total_distortion += fragDistortion
-    DIAS_result["molecule"]["distortion"] = total_distortion
+    DIASresult["molecule"]["distortion"] = total_distortion
 
     # interaction energy
     total_interaction = total_energy - total_distortion
-    DIAS_result["molecule"]["interaction"] = total_interaction
-
-
-    clear_logging = ParameterManager.clear_logging
+    DIASresult["molecule"]["interaction"] = total_interaction
 
     # clear logging
-    if is_ipython() and clear_logging:
+    if is_ipython() and ParameterManager.clear_logging:
         clear_output(wait=True)
 
-    return DIAS_result
+    return DIASresult
 
 
 
 def trajDIAS(
     images:Iterable[dict], 
     engine:asedias.Engine, 
-    use_spin:bool
+    use_spin:bool,
+    trajDIASresult:dict
     ):
     """
     This function performs DIAS calculations for each IRC point in a trajectory file.
@@ -167,18 +181,25 @@ def trajDIAS(
       - trajDIASresult(dict) : A dictionary containing DIAS results for each frame in the trajectory.
     """
     NumImages = sum(1 for _ in images)
-    
+    success_list = list()
     # iterate DIAS calculation for each image
-    trajDIASresult = dict()
     for image_idx, image in enumerate(images):
         progress_bar(NumImages, image_idx)
-        trajDIASresult[image_idx] = DIAS(
+        # pass if already normally calculated
+        if trajDIASresult.get(image_idx) and isinstance(trajDIASresult, dict):
+            if trajDIASresult[image_idx].get('opt_success'):
+                continue
+        DIASresult = DIAS(
             image=image,
             engine=engine
             use_spin=use_spin
             )
+        success_list.append(DIASresult['opt_success'])
+        trajDIASresult[image_idx] = DIASresult
+    
+    if not all(success_list): warnings.warn("asedias CALCULATION ABNORMALLY TERMINATED", category=UserWarning)
+    else: print("asedias CALCULATION NORMALLY TERMINATED")
 
-    print("ase_dias CALCULATION TERMINATED NORMALLY")
     return trajDIASresult
 
 

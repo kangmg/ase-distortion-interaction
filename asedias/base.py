@@ -126,6 +126,9 @@ class ParameterManager:
     preoptimizer_maxiter = 300
     
     clear_logging = True
+
+    # If true only interaction analysis is performed
+    interaction_only = False
   
     @classmethod
     def default_parameters(cls):
