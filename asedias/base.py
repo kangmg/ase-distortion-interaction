@@ -1,4 +1,3 @@
-from ase.optimize import BFGS
 import ase
 import numpy as np
 import os
@@ -7,16 +6,21 @@ from asedias.utils import read_traj
 import asedias
 import warnings
 from typing import Callable, Union
+from asedias.dias import trajDIAS
 
 
+
+# TODO
+# supports pbc, unit cell
 class System:
     """
     asedias System class
+
     """
-    def __init__(self, frag_indices:Union[list, np.ndarray], frag_charges:list[int], 
+    def __init__(self, frag_indices:Union[list[list[int]], np.ndarray], frag_charges:list[int], 
                  frag_spins:list[int]=None, system_charge:int=None, system_spin:int=None, 
                  images:list[ase.Atoms]=None, filepath:str=None, frag_names:list[str]=None, 
-                 constraints:Union[list, np.ndarray]=None
+                 constraints:Union[list[int], np.ndarray]=None
                  ):
         """
         
@@ -25,6 +29,7 @@ class System:
 
         """
         self.filename = None
+        self.Engine = None
 
         # images or filepath must be specified properly
         if not images and not filepath: ValueError('images or filepath must be specified')
@@ -34,25 +39,21 @@ class System:
             images = read_traj(filepath)
             assert images, "images are empty"
 
-        # convert to list if it is np.ndarray
+        # convert to list if it is np.ndarray and sort by ascending
         frag_indices = list(
-            indices.tolist() if isinstance(indices, np.ndarray) else indices
+            sorted(indices.tolist()) if isinstance(indices, np.ndarray) else sorted(indices)
             for indices in frag_indices
-        )
-        constraints = list(
-            indices.tolist() if isinstance(indices, np.ndarray) else indices
-            for indices in constraints
         )
 
         # validate parameters
-        assert list(len(frag) for frag in frag_charges) == list(len(frag) for frag in frag_indices), 'shape mismatch'
+        assert len(frag_charges) == len(frag_indices), 'shape mismatch'
         assert len(images[0]) == len(set(sum(frag_indices, []))), 'incomplete indices list'
 
         self.images = images
         self.frag_charges = frag_charges
         self.frag_spins = frag_spins
         self.frag_indices = frag_indices # start with 0
-        
+
         self.n_frags = len(frag_charges)
         self.n_images = len(images)
 
@@ -62,7 +63,7 @@ class System:
         self.system_spin = system_spin
 
         # fragment name
-        if not self.frag_names:
+        if not frag_names:
             default_names = list(
                 f"frag_{i+1}" for i in range(self.n_frags)
             )
@@ -70,25 +71,21 @@ class System:
         else: 
             assert len(frag_names) == self.n_frags, "len(frag_names) must be same with n_frags"
             self.frag_names = frag_names 
-
+        
+        self.frag_constraints = [[]] * self.n_frags
         if constraints:
+            # convert constraints to list if it is np.array and sort by ascending
+            constraints = sorted(constraints.tolist()) if isinstance(constraints, np.ndarray) else sorted(constraints)
             # divide constraints
-            _fragment_constraints = list(list() for _ in self.frag_indices)
-
+            # the index in the molecular system must be converted to the index in the fragment system
+            # e.g. constraint index 3 in the fragment [2, 3, 5] should be converted to 1
             for constraint_idx in constraints:
                 for frag_idx, frag_indice in enumerate(self.frag_indices):
                     if constraint_idx in frag_indice: 
-                        _fragment_constraints[frag_idx].append(constraint_idx)
+                        self.frag_constraints[frag_idx].append(frag_indice.index(constraint_idx))
                         break
-            self.frag_constraints = _fragment_constraints
-        else:
-            self.frag_constraints = None
 
-        self.Engine = None
-    
-    # TODO 
-    # apply constraint to optimize function
-    # include constraint to interator
+
     def iterator(self):
         """
         Generator to yield system image and fragment information
@@ -101,7 +98,8 @@ class System:
                 'frag_indices': self.frag_indices,
                 'frag_charges': self.frag_charges,
                 'frag_spins': self.frag_spins,
-                'frag_names': self.frag_names
+                'frag_names': self.frag_names,
+                'frag_constraints': self.frag_constraints
                 }
 
 
@@ -114,63 +112,63 @@ class Engine:
     """
     
     """
-    def __init__(self, calc_wrapper, preoptimizer_wrapper=None)
+    def __init__(self, calc_wrapper, preoptimizer_wrapper=None):
         self.calc_wrapper = calc_wrapper
         self.preoptimizer_wrapper = preoptimizer_wrapper
 
 
-class ParameterManager:
-    """Package parameter manager class
+# class ParameterManager:
+#     """Package parameter manager class
     
     
-    Usage
-    -----
-    >>> from asedias import ParameterManager
-    >>> 
-    >>> # show all parameters
-    >>> print(ParameterManager.show_parameters())
-    >>> 
-    >>> # change parameters
-    >>> ParameterManager.param_name = 'new value'
-    """
-    unit = ''
-    axis = 'irc'
+#     Usage
+#     -----
+#     >>> from asedias import ParameterManager
+#     >>> 
+#     >>> # show all parameters
+#     >>> print(ParameterManager.show_parameters())
+#     >>> 
+#     >>> # change parameters
+#     >>> ParameterManager.param_name = 'new value'
+#     """
+#     unit = ''
+#     axis = 'irc'
 
-    optimizer = BFGS # FIRE, LBFGS
+#     optimizer = BFGS # FIRE, LBFGS
 
-    calc_fmax = 0.05
-    calc_maxiter = 100
+#     calc_fmax = 0.05
+#     calc_maxiter = 100
 
-    preoptimizer_fmax = 0.03
-    preoptimizer_maxiter = 300
+#     preoptimizer_fmax = 0.03
+#     preoptimizer_maxiter = 300
     
-    clear_logging = True
+#     clear_logging = True
 
-    # If true only interaction analysis is performed
-    interaction_only = False
+#     # If true only interaction analysis is performed
+#     interaction_only = False
   
-    @classmethod
-    def default_parameters(cls):
-        """
-        Show all default parameters
-        """
-        _params = {
-            key: value
-            for key, value in cls.__dict__.items()
-            if not key.startswith("__") and not callable(value)
-        }
-        try:
-            from pprint import pformat
-            return pformat(_params, indent=1)
-        except ModuleNotFoundError:
-            return _params
+#     @classmethod
+#     def default_parameters(cls):
+#         """
+#         Show all default parameters
+#         """
+#         _params = {
+#             key: value
+#             for key, value in cls.__dict__.items()
+#             if not key.startswith("__") and not callable(value)
+#         }
+#         try:
+#             from pprint import pformat
+#             return pformat(_params, indent=1)
+#         except ModuleNotFoundError:
+#             return _params
 
 
 class aseDIAS:
     """
     
     """
-    def __init__(self, system:asedias.System, use_spin:bool=False, job_id:str=None):
+    def __init__(self, system:System, use_spin:bool=False, job_id:str=None):
         self.system = system
 
         if use_spin:
@@ -198,8 +196,20 @@ class aseDIAS:
         if not job_id:
             pass
         pass
+        
+        self.tmp_contrainer = dict()
 
     def run(self):
+        """
         
+        """
+        assert self.system.Engine, "Engine is not configured"
         if isinstance(self.system.Engine, Callable):
             self.system.Engine = Engine(calc_wrapper=self.system.Engine)
+
+        tmp = trajDIAS(
+            images=self.system.iterator(),
+            engine=self.system.Engine,
+            trajDIASresult=self.tmp_contrainer,
+            use_spin=False
+        )

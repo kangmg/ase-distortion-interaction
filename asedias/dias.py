@@ -1,11 +1,62 @@
 from typing import Callable
 from ase.calculators.calculator import Calculator
+from ase.optimize import BFGS
+from ase.constraints import FixAtoms
 import ase
 import warnings
-from asedias.base import ParameterManager
 from asedias.utils import is_ipython, progress_bar
 import asedias
 from collections.abc import Iterable
+from .types import Engine
+
+
+
+class ParameterManager:
+    """Package parameter manager class
+    
+    
+    Usage
+    -----
+    >>> from asedias import ParameterManager
+    >>> 
+    >>> # show all parameters
+    >>> print(ParameterManager.show_parameters())
+    >>> 
+    >>> # change parameters
+    >>> ParameterManager.param_name = 'new value'
+    """
+    unit = ''
+    axis = 'irc'
+
+    optimizer = BFGS # FIRE, LBFGS
+
+    calc_fmax = 0.05
+    calc_maxiter = 100
+
+    preoptimizer_fmax = 0.03
+    preoptimizer_maxiter = 300
+    
+    clear_logging = True
+
+    # If true only interaction analysis is performed
+    interaction_only = False
+  
+    @classmethod
+    def default_parameters(cls):
+        """
+        Show all default parameters
+        """
+        _params = {
+            key: value
+            for key, value in cls.__dict__.items()
+            if not key.startswith("__") and not callable(value)
+        }
+        try:
+            from pprint import pformat
+            return pformat(_params, indent=1)
+        except ModuleNotFoundError:
+            return _params
+
 
 
 if is_ipython:
@@ -76,7 +127,7 @@ def optimize(calc_wrapper:Callable[..., Calculator],
     return opt_success
 
 
-def IAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
+def IAS(image:dict, engine:Engine, use_spin:bool)->dict:
     """
     Single Point interaction analysis(IAS) calculation
 
@@ -136,7 +187,7 @@ def IAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
     return DIASresult
 
 
-def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
+def DIAS(image:dict, engine:Engine, use_spin:bool)->dict:
     """
     Single Point distortion interaction analysis(DIAS) calculation
 
@@ -165,10 +216,13 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
 
     # distortion energy
     total_distortion = 0
-    frag_container = zip(image['frag_indices'], image['frag_charges'], image['frag_spins'], image['frag_names'])
+    frag_container = zip(image['frag_indices'], image['frag_charges'], image['frag_spins'], image['frag_names'], image['frag_constraints'])
     frag_opt_success_list = list()
-    for frag_index, frag_charge, frag_spin, frag_name in frag_container:
+    for frag_index, frag_charge, frag_spin, frag_name, frag_constraint in frag_container:
         frag_atoms = _molecule[frag_index]
+        # apply constraint
+        constraints = FixAtoms(indices=frag_constraint) if frag_constraint else None
+        frag_atoms.constraints = constraints
         # preopt energy
         pre_optimized_energy = potential_energy(
            calc_wrapper=engine.calc_wrapper, 
@@ -216,7 +270,7 @@ def DIAS(image:dict, engine:asedias.Engine, use_spin:bool)->dict:
 
 def trajDIAS(
     images:Iterable[dict], 
-    engine:asedias.Engine, 
+    engine:Engine, 
     use_spin:bool,
     trajDIASresult:dict
     ):
@@ -244,7 +298,7 @@ def trajDIAS(
         if trajDIASresult[image_idx].get('success'): continue
         DIASresult = _analysis_ftn(
             image=image,
-            engine=engine
+            engine=engine,
             use_spin=use_spin
             )
         success_list.append(DIASresult['opt_success'])

@@ -16,7 +16,7 @@ import ase.io
 from io import StringIO
 from os.path import isfile, dirname, basename
 import matplotlib.pyplot as plt
-from asedias.utils import is_ipython, progress_bar, husl_palette, markers_, json_dump, draw_xyz
+from asedias.utils import is_ipython, progress_bar, husl_palette, markers_
 from importlib.util import find_spec
 import subprocess
 import warnings
@@ -120,7 +120,7 @@ def load_aimnet2(model:str="wb97m-d3"): # TO BE CHANGE (docs string)
     - torch model (torch.jit.ScriptModule)
   """
   # model Directory
-  packageDir = find_spec("ase_dias").submodule_search_locations[0]
+  packageDir = find_spec("asedias").submodule_search_locations[0]
   modelsDir = os.path.join(packageDir, "models", "aimnet2")
   # load model 
   if abbr.get(model):
