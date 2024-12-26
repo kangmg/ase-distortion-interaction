@@ -5,11 +5,12 @@ from ase.constraints import FixAtoms
 import ase
 import warnings
 from asedias.utils import is_ipython, progress_bar
-import asedias
 from collections.abc import Iterable
-from .types import Engine
+from copy import deepcopy
+import itertools
 
-
+if is_ipython:
+    from IPython.display import clear_output
 
 class ParameterManager:
     """Package parameter manager class
@@ -56,11 +57,6 @@ class ParameterManager:
             return pformat(_params, indent=1)
         except ModuleNotFoundError:
             return _params
-
-
-
-if is_ipython:
-    from IPython.display import clear_output
 
 
 
@@ -127,7 +123,7 @@ def optimize(calc_wrapper:Callable[..., Calculator],
     return opt_success
 
 
-def IAS(image:dict, engine:Engine, use_spin:bool)->dict:
+def IAS(image:dict, engine, use_spin:bool)->dict:
     """
     Single Point interaction analysis(IAS) calculation
 
@@ -187,7 +183,7 @@ def IAS(image:dict, engine:Engine, use_spin:bool)->dict:
     return DIASresult
 
 
-def DIAS(image:dict, engine:Engine, use_spin:bool)->dict:
+def DIAS(image:dict, engine, use_spin:bool)->dict:
     """
     Single Point distortion interaction analysis(DIAS) calculation
 
@@ -270,7 +266,7 @@ def DIAS(image:dict, engine:Engine, use_spin:bool)->dict:
 
 def trajDIAS(
     images:Iterable[dict], 
-    engine:Engine, 
+    engine, 
     use_spin:bool,
     trajDIASresult:dict
     ):
@@ -285,7 +281,8 @@ def trajDIAS(
     -------
       - trajDIASresult(dict) : A dictionary containing DIAS results for each frame in the trajectory.
     """
-    NumImages = sum(1 for _ in images)
+    gen_size, images = itertools.tee(images, 2)
+    NumImages = sum(1 for _ in gen_size)
     success_list = list()
     if ParameterManager.interaction_only:
         _analysis_ftn = IAS
@@ -295,16 +292,17 @@ def trajDIAS(
     for image_idx, image in enumerate(images):
         progress_bar(NumImages, image_idx)
         # pass if already normally calculated
-        if trajDIASresult[image_idx].get('success'): continue
+        if trajDIASresult.get(image_idx):
+            if trajDIASresult.get(image_idx).get('success'): continue
         DIASresult = _analysis_ftn(
             image=image,
             engine=engine,
             use_spin=use_spin
             )
-        success_list.append(DIASresult['opt_success'])
+        success_list.append(DIASresult['success'])
         trajDIASresult[image_idx] = DIASresult
     
-    if not all(success_list): warnings.warn("asedias CALCULATION ABNORMALLY TERMINATED", category=UserWarning)
+    if not all(success_list) or not success_list: warnings.warn("asedias CALCULATION ABNORMALLY TERMINATED", category=UserWarning)
     else: print("asedias CALCULATION NORMALLY TERMINATED")
 
     return trajDIASresult

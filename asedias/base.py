@@ -2,12 +2,11 @@ import ase
 import numpy as np
 import os
 import datetime
-from asedias.utils import read_traj
+from asedias.utils import read_traj, animation
 import asedias
 import warnings
 from typing import Callable, Union
 from asedias.dias import trajDIAS
-
 
 
 # TODO
@@ -45,33 +44,24 @@ class System:
             for indices in frag_indices
         )
 
-        # validate parameters
-        assert len(frag_charges) == len(frag_indices), 'shape mismatch'
-        assert len(images[0]) == len(set(sum(frag_indices, []))), 'incomplete indices list'
-
         self.images = images
         self.frag_charges = frag_charges
-        self.frag_spins = frag_spins
         self.frag_indices = frag_indices # start with 0
 
         self.n_frags = len(frag_charges)
         self.n_images = len(images)
 
-        if not system_charge:
-            system_charge = sum(frag_charges)
-        self.system_charge = system_charge
+        self.frag_spins = frag_spins if frag_spins else [[]] * self.n_frags
+        self.system_charge = system_charge if system_charge else sum(frag_charges)
         self.system_spin = system_spin
+        self.frag_names = frag_names if frag_names else list(f"frag_{i+1}" for i in range(self.n_frags))
 
-        # fragment name
-        if not frag_names:
-            default_names = list(
-                f"frag_{i+1}" for i in range(self.n_frags)
-            )
-            self.frag_names = default_names
-        else: 
-            assert len(frag_names) == self.n_frags, "len(frag_names) must be same with n_frags"
-            self.frag_names = frag_names 
-        
+        # validate parameters
+        assert len(self.frag_names) == self.n_frags, "len(frag_names) must be same with n_frags"
+        assert len(self.frag_spins) == self.n_frags, "len(frag_spins) must be same with n_frags"
+        assert len(frag_charges) == len(frag_indices), 'shape mismatch'
+        assert len(images[0]) == len(set(sum(frag_indices, []))), 'incomplete indices list'
+
         self.frag_constraints = [[]] * self.n_frags
         if constraints:
             # convert constraints to list if it is np.array and sort by ascending
@@ -84,6 +74,16 @@ class System:
                     if constraint_idx in frag_indice: 
                         self.frag_constraints[frag_idx].append(frag_indice.index(constraint_idx))
                         break
+    
+    def plot(self):
+        pass
+
+    def animation(self, colorby:str='fragment', covalent_radius_percent:float=108., **kwargs):
+        """
+        traj animation
+        """
+        animation(images=self.images, frag_indices=self.frag_indices, colorby=colorby,
+                  covalent_radius_percent=covalent_radius_percent, **kwargs )
 
 
     def iterator(self):
@@ -206,9 +206,10 @@ class aseDIAS:
         assert self.system.Engine, "Engine is not configured"
         if isinstance(self.system.Engine, Callable):
             self.system.Engine = Engine(calc_wrapper=self.system.Engine)
-
+        
+        _images = self.system.iterator()
         tmp = trajDIAS(
-            images=self.system.iterator(),
+            images=_images,
             engine=self.system.Engine,
             trajDIASresult=self.tmp_contrainer,
             use_spin=False
