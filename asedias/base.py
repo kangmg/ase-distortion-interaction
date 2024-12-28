@@ -11,6 +11,7 @@ from asedias.dias import trajDIAS
 
 # TODO
 # supports pbc, unit cell
+# frag_indices, frag_charges, frag_spins, frag_names --> 이 부분 from_json, from_xml 기능 넣기
 class System:
     """
     asedias System class

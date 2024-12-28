@@ -31,11 +31,16 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
     - bond_scaler : float
         Scaling factor for bond visualization. Default: 10,000.
     - legend : bool
-        Show legend in the visualization. Default: False.
+        Show legend in the visualization. Default: True.
+    - scale_box : bool
+        Show scale box in the visualization. Default: True.
+    - unit_bar : bool
+        Show unit bar in the visualization. Default: False.
 
     Returns
     -------
     None. Displays a 3D interactive visualization.
+    
     """
     def _get_pallete_colors(cmap: str | list, n: int):
         """Generate a list of n colors from a Plotly colormap or a custom color list."""
@@ -56,27 +61,102 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
 
     def _get_frag_color(frag_indices:list):
         """
-        
+
         """
         colors = [
-            "#FF5733", "#33FF57", "#3357FF", "#F5A623", "#8E44AD", 
+            "#FF5733", "#33FF57", "#3357FF", "#F5A623", "#8E44AD",
             "#2ECC71", "#F39C12", "#1F618D", "#F1948A", "#7D3C98"
             ]
         frag_colors = colors[:len(frag_indices)]
         return frag_colors
+
+    def _plot_scale_box(box_half_length:float, unit_bar:bool=True):
+        """
+        plot scale box
+        """
+        hl = box_half_length # box half-length
+
+        # Box vertices
+        x_coords = [-hl, hl, hl, -hl, -hl, hl, hl, -hl]
+        y_coords = [-hl, -hl, hl, hl, -hl, -hl, hl, hl]
+        z_coords = [-hl, -hl, -hl, -hl, hl, hl, hl, hl]
+
+        # Define edges by vertex indices
+        edges = [
+            (0, 1), (1, 2), (2, 3), (3, 0),  # Bottom face edges
+            (4, 5), (5, 6), (6, 7), (7, 4),  # Top face edges
+            (0, 4), (1, 5), (2, 6), (3, 7)   # Vertical edges
+            ]
+
+        x_box_lines = []
+        y_box_lines = []
+        z_box_lines = []
+
+        for edge in edges:
+            for vertex in edge:
+                x_box_lines.append(x_coords[vertex])
+                y_box_lines.append(y_coords[vertex])
+                z_box_lines.append(z_coords[vertex])
+            x_box_lines.append(None)
+            y_box_lines.append(None)
+            z_box_lines.append(None)
+
+        box_plots = [
+            # scaling bar
+            go.Scatter3d(
+                x=[hl, hl],
+                y=[-hl, -hl+1],
+                z=[-hl, -hl],
+                mode='lines+text',
+                line=dict(color='red', width=13),
+                text=['1 Å'],
+                textposition='top center',
+                textfont=dict(size=12, color='red'),
+                showlegend=False
+            ) if unit_bar else go.Scatter3d(
+                x=[hl, hl],
+                y=[-hl, +hl],
+                z=[-hl, -hl],
+                mode='lines+text',
+                line=dict(color='red', width=13),
+                text=[f'{np.round(hl*2, 1)} Å'],
+                textposition='top center',
+                textfont=dict(size=12, color='red'),
+                showlegend=False
+            ),
+            # box lines
+            go.Scatter3d(
+                x=x_box_lines,
+                y=y_box_lines,
+                z=z_box_lines,
+                mode='lines',
+                line=dict(color='grey', width=4),
+                showlegend=False
+            )
+            ]
+        return box_plots
 
     # Default visualization parameters
     alpha_atoms = kwargs.get("alpha_atoms", 1)
     alpha_bonds = kwargs.get("alpha_bonds", 0.7)
     atom_scaler = kwargs.get("atom_scaler", 300)
     bond_scaler = kwargs.get("bond_scaler", 8200000)
+    scale_box = kwargs.get("scale_box", True)
     legend = kwargs.get("legend", True)
+    unit_bar = kwargs.get("unit_bar", False)
+
+    # Make sure each position is centered
+    for atoms in images:
+        atoms.center()
 
     # Calculate global ranges for all molecular structures
     all_positions = np.vstack([atoms.positions for atoms in images])
     range_array = np.vstack([[np.min(all_positions[:, i]) for i in range(3)], [np.max(all_positions[:, i]) for i in range(3)]])
     x_range, y_range, z_range = range_array[:, 0], range_array[:, 1], range_array[:, 2]
     padding = 0.1
+    if scale_box:
+        half_box_length = np.max(np.abs(range_array)) * 1.3
+        max_range = [- half_box_length - padding, half_box_length + padding]
     x_range = [x_range[0] - padding, x_range[1] + padding]
     y_range = [y_range[0] - padding, y_range[1] + padding]
     z_range = [z_range[0] - padding, z_range[1] + padding]
@@ -104,9 +184,8 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                 name=f'Molecule {mol_idx + 1} atoms'
             ))
 
-            # Add bonds (simple covalent bond estimation based on radii)
-            # bond thickness
-            bond_thickness = np.maximum(np.log10(bond_scaler / num_of_atoms) * 2, 1)
+            # Add bonds
+            bond_thickness = np.maximum(np.log10(bond_scaler / num_of_atoms) * 2, 1) # bond thickness
             bond_x, bond_y, bond_z = [], [], []
             for i, pos1 in enumerate(atoms.positions):
                 for j, pos2 in enumerate(atoms.positions[i + 1:], start=i+1):
@@ -123,6 +202,13 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                 line=dict(width=bond_thickness, color=color),
                 name=f'Molecule {mol_idx + 1} bonds'
             ))
+            
+            # add scale_box plots if scale_box == True
+            if scale_box:
+                frame_data.extend(
+                    _plot_scale_box(box_half_length=half_box_length, unit_bar=unit_bar)
+                    )
+
             frames.append(go.Frame(data=frame_data, name=str(mol_idx)))
 
     elif colorby == "fragment":
@@ -134,7 +220,7 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
             frame_data = []
             for frag_idx, (atomic_indices, frag_color) in enumerate(zip(frag_indices, frag_colors)):
                 frag_atoms = atoms[atomic_indices]
-                
+
                 # Add atoms
                 frame_data.append(go.Scatter3d(
                     x=frag_atoms.positions[:, 0],
@@ -150,11 +236,9 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                     hovertext=f'Fragment {frag_idx + 1}'
                 ))
 
-
                 # Add bonds
                 bond_x, bond_y, bond_z = [], [], []
-                # bond thickness
-                bond_thickness = np.maximum(np.log10(bond_scaler / num_of_atoms) * 2, 1)
+                bond_thickness = np.maximum(np.log10(bond_scaler / num_of_atoms) * 2, 1) # bond thickness
                 for i, pos1 in enumerate(frag_atoms.positions):
                     for j, pos2 in enumerate(frag_atoms.positions[i + 1:], start=i+1):
                         dist = np.linalg.norm(pos1 - pos2)
@@ -174,7 +258,15 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                     hoverinfo='text',
                     hovertext=f'Fragment {frag_idx + 1}'
                 ))
+
+            # add scale_box plots if scale_box == True
+            if scale_box:
+                frame_data.extend(
+                    _plot_scale_box(box_half_length=half_box_length, unit_bar=unit_bar)
+                    )
+
             frames.append(go.Frame(data=frame_data, name=str(mol_idx)))
+
 
     # Create the figure
     fig = go.Figure()
@@ -222,22 +314,22 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
             'x': 0.1,
             'y': 0,
             'steps': [
-                {'args': [[f.name], {'frame': {'duration': 300, 'redraw': True}, 'mode': 'immediate', 'transition': {'duration': 300}}], 
-                 'label': str(k), 
+                {'args': [[f.name], {'frame': {'duration': 300, 'redraw': True}, 'mode': 'immediate', 'transition': {'duration': 300}}],
+                 'label': str(k),
                  'method': 'animate'} for k, f in enumerate(fig.frames)
             ]
         }],
         scene=dict(
-            xaxis=dict(range=x_range, visible=False),
-            yaxis=dict(range=y_range, visible=False),
-            zaxis=dict(range=z_range, visible=False),
-            aspectmode='data',
+            xaxis=dict(range=max_range if scale_box else x_range, visible=False),
+            yaxis=dict(range=max_range if scale_box else y_range, visible=False),
+            zaxis=dict(range=max_range if scale_box else z_range, visible=False),
+            aspectmode='manual',
             camera_projection=dict(type='orthographic'),
             aspectratio=dict(x=1, y=1, z=1),
         ),
         showlegend=True if legend else False
     )
-
+    
     fig.show()
 
 

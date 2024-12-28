@@ -306,7 +306,7 @@ def trajDIAS(
     else: print("asedias CALCULATION NORMALLY TERMINATED")
 
     return trajDIASresult
-
+ 
 
 # def DIASparser(
 #     resultDictionary:dict, 
