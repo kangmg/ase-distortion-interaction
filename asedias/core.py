@@ -1,12 +1,13 @@
 import ase
 import numpy as np
-import os
-import datetime
-from asedias.utils import read_traj, animation
 import asedias
-import warnings
-from typing import Callable, Union
+from asedias.utils import read_traj, animation, autofrag, fragment_selector, atoms2rdkit_mol, json_dump
 from asedias.dias import trajDIAS
+import os
+from typing import Callable, Union
+import warnings
+import uuid
+import time
 
 
 # TODO
@@ -169,12 +170,18 @@ class aseDIAS:
     """
     
     """
-    def __init__(self, system:System, use_spin:bool=False, job_id:str=None):
+    def __init__(self, system:System, use_spin:bool=False, job_name:str=None, metadata:Union[dict, str]=None):
         self.system = system
-
+        self.resultDict = dict()
+        self.job_name = str(uuid.uuid4())[:6] if not job_name else job_name
+        self.metadata = {
+            'Note':         'asedias cauculation result',
+            'Project Page': 'https://github.com/kangmg/ase-distortion-interaction'
+            } if not metadata else metadata
+        
         if use_spin:
             # estimate system spin
-            if self.system.system_spin:
+            if not self.system.system_spin:
                 warnings.warn("frag_spins is not specified. Spin estimated by number of electrons in the fragments.", category=UserWarning)
                 frag_atoms = list(
                     self.system.images[0][index] for index in self.system.frag_indices
@@ -188,30 +195,81 @@ class aseDIAS:
                 self.system.frag_spins = _frag_spins
 
             # estimate frag spin
-            if self.system.frag_spins:
+            if not self.system.frag_spins:
                 warnings.warn("system_spin is not specified. Spin estimated by number of electrons in the molecule.", category=UserWarning)
                 total_e = sum(atom.number for atom in self.images[0]) - self.system_charge
                 # reset system system_spin
                 self.system.system_spin = 0 if total_e % 2 == 0 else 1
-        
-        if not job_id:
-            pass
-        pass
-        
-        self.tmp_contrainer = dict()
 
     def run(self):
         """
-        
+        run ase dias culculation
         """
-        assert self.system.Engine, "Engine is not configured"
+        START = time.time()
+        # configure calcualtion engine correctly
+        assert self.system.Engine, "system.Engine is empty"
         if isinstance(self.system.Engine, Callable):
             self.system.Engine = Engine(calc_wrapper=self.system.Engine)
         
+        # run asedias calculations
         _images = self.system.iterator()
-        tmp = trajDIAS(
+        trajDIAS(
             images=_images,
             engine=self.system.Engine,
-            trajDIASresult=self.tmp_contrainer,
+            trajDIASresult=self.resultDict,
             use_spin=False
         )
+        END = time.time()
+        RUNTIME = round((END - START) / 60, 2) # min
+
+        # save result
+        json_dump(
+            trajDIASresult=self.resultDict,
+            runtime=RUNTIME,
+            job_name=self.job_name,
+            metadata=self.metadata
+            )
+
+
+class Fragmentation:
+    """
+    Fragmentation utils
+    """
+    def __init__(self, images:Union[ase.Atoms, list], image_idx=0):
+        self.images = images
+        self.image_idx = image_idx
+        self.fragmentations = None
+
+    def animation(self):
+        """
+        Plot animation
+        """
+        animation(
+            images=self.images,
+            colorby='molecule',
+            template='plotly',
+        )
+
+    def autofrag(self, covalent_radius_percent:float=108.):
+        """
+        Auto fragmentation
+        """
+        self.fragmentations = autofrag(self.images, covalent_radius_percent=covalent_radius_percent)
+        _Blue = "\033[34m"
+        _Green = "\033[32m"
+        _Bold = "\033[1m"
+        _Reset = "\033[0m"
+        for idx, fragmentation in enumerate(self.fragmentations):
+            print(f"=====================\n{_Blue}Fragmentation idx{_Reset} : {_Bold}{idx}{_Reset}\n" \
+                  f"{_Green}Num. of fragments{_Reset} : {_Bold}{len(fragmentation)}{_Reset}\n---------------------")
+            print(fragmentation)
+            print("---------------------")
+
+    def selector(self):
+        """
+        Fragment Selector with plotly engine
+        """
+        if isinstance(self.images, list):
+            atoms = self.images[self.image_idx]
+        else: atoms = self.images
+        fragment_selector(atoms2rdkit_mol(atoms))

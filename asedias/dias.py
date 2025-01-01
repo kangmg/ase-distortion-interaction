@@ -247,14 +247,14 @@ def DIAS(image:dict, engine, use_spin:bool)->dict:
         fragDistortion = pre_optimized_energy - optimized_energy # eV unit
         DIASresult[frag_name] = dict()
         DIASresult[frag_name]['distortion'] = fragDistortion
-        DIASresult[frag_name]['opt_success'] = opt_success
+        DIASresult[frag_name]['opt_success'] = int(opt_success)
         total_distortion += fragDistortion
     DIASresult["molecule"]["distortion"] = total_distortion
 
     # interaction energy
     total_interaction = total_energy - total_distortion
     DIASresult["molecule"]["interaction"] = total_interaction
-    DIASresult['success'] = all(frag_opt_success_list)
+    DIASresult['success'] = int(all(frag_opt_success_list))
 
     # clear logging
     if is_ipython() and ParameterManager.clear_logging:
@@ -305,7 +305,7 @@ def trajDIAS(
     if not all(success_list) or not success_list: warnings.warn("asedias CALCULATION ABNORMALLY TERMINATED", category=UserWarning)
     else: print("asedias CALCULATION NORMALLY TERMINATED")
 
-    return trajDIASresult
+    # return trajDIASresult
  
 
 # def DIASparser(

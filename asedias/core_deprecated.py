@@ -16,7 +16,7 @@ import ase.io
 from io import StringIO
 from os.path import isfile, dirname, basename
 import matplotlib.pyplot as plt
-from asedias.utils import is_ipython, progress_bar, husl_palette, markers_
+from asedias.utils import is_ipython, progress_bar
 from importlib.util import find_spec
 import subprocess
 import warnings

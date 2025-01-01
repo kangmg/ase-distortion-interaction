@@ -1,14 +1,160 @@
 from datetime import datetime
 import json
-from os.path import basename, isfile
+from os.path import basename, isfile, exists
 import re
 from io import StringIO
 import plotly.colors as pc
 import plotly.graph_objects as go
 from itertools import cycle
 import numpy as np
-from asedias.data import atomic_number2element_symbol, covalent_radii
+from asedias.data import atomic_number2element_symbol, covalent_radii, atomic_symbols2hex
 import ase
+from scipy.spatial.distance import pdist, squareform
+import warnings 
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from typing import Union
+from ase.units import mol, kcal,  kJ, Hartree, eV
+import pandas as pd
+
+
+def is_ipython():
+  try:
+    __IPYTHON__
+    return True
+  except NameError:
+    return False
+  
+if is_ipython:
+    from IPython.display import display
+
+
+
+def get_adjacency_matrix(atoms:ase.Atoms, covalent_radius_percent:float=108.)->np.ndarray:
+    """
+    Get adjacency matrix from ASE Atoms object.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms
+        ASE Atoms object representing the molecule.
+
+    covalent_radius_percent : float, optional, default=108.0
+        The percentage of the standard covalent radii to use for determining bond distances.
+
+    Returns
+    -------
+    np.ndarray
+        Adjacency matrix representing bond connections between atoms.
+    """
+    def _covalent_radii(element: str, percent: float):
+        """resize covalent radius"""
+        radius = covalent_radii[element]
+        radius *= (percent / 100)
+        return radius
+    # Get atomic coordinates and symbols
+    coordinates = atoms.positions  # (N, 3)
+    symbols = atoms.get_chemical_symbols()  # (N, )
+
+    # Calculate interatomic distance (L2 norm) matrix
+    L2_matrix = squareform(pdist(coordinates, 'euclidean'))  # (N, N)
+
+    # Calculate sum of atomic radii matrix
+    radii_vector = np.array([_covalent_radii(symbol, covalent_radius_percent) for symbol in symbols])  # (N, )
+    radii_sum_matrix = np.add.outer(radii_vector, radii_vector)  # (N, N)
+
+    # Calculate adjacency (bond) matrix
+    adjacency_matrix = np.array(L2_matrix <= radii_sum_matrix).astype(int)  # (N, N)
+    np.fill_diagonal(adjacency_matrix, 0)  # Diagonal means self-bonding is not allowed
+
+    return adjacency_matrix
+
+
+def atoms2rdkit_mol(atoms:ase.Atoms, covalent_radius_percent:float=108.)->Chem.Mol:
+    """
+    convert ase.Atoms to 2D rdkit.Chem.Mol
+    """
+    # get adjacency matrix
+    adjacency_matrix = get_adjacency_matrix(
+        atoms=atoms, 
+        covalent_radius_percent=covalent_radius_percent
+        )
+
+    # define rdkit mol
+    mol = Chem.RWMol()
+    for atom in atoms:
+        rdkit_atom = Chem.Atom(int(atom.number))
+        mol.AddAtom(rdkit_atom)
+    
+    for i in range(len(atoms)):
+        for j in range(i+1, len(atoms)):
+            if adjacency_matrix[i, j] == 1:
+                mol.AddBond(i, j, Chem.rdchem.BondType.SINGLE)
+    
+    # build rdkit mol
+    mol = mol.GetMol()
+    
+    # compute xy coordinate
+    AllChem.Compute2DCoords(mol)
+    
+    return mol
+
+
+def autofrag(atoms_list: list, covalent_radius_percent: float = 108.):
+    """
+    Parameters
+    ----------
+    atoms_list : list of ase.Atoms
+        A list of ase.Atoms objects, each representing a molecule.
+
+    covalent_radius_percent : float, optional, default=108.0
+        The percentage of the standard covalent radii to use for determining bond distances.
+
+    Returns
+    -------
+
+    """
+    def find_fragments(adjacency_matrix):
+        """Find connected fragments using adjacency matrix."""
+        n_atoms = len(adjacency_matrix)
+        visited = np.zeros(n_atoms, dtype=bool)
+        fragments = []
+
+        def dfs(atom_idx, fragment):
+            """Depth-first search to find all atoms connected to the given atom_idx."""
+            visited[atom_idx] = True
+            fragment.append(atom_idx)
+            for neighbor_idx in range(n_atoms):
+                if adjacency_matrix[atom_idx, neighbor_idx] == 1 and not visited[neighbor_idx]:
+                    dfs(neighbor_idx, fragment)
+
+        for atom_idx in range(n_atoms):
+            if not visited[atom_idx]:
+                fragment = []
+                dfs(atom_idx, fragment)
+                fragments.append(sorted(fragment))
+
+        return fragments
+
+    fragmentations = []
+
+    for atoms in atoms_list:
+        # get adjacency matrix
+        adjacency_matrix = get_adjacency_matrix(atoms=atoms, covalent_radius_percent=covalent_radius_percent)
+        np.fill_diagonal(adjacency_matrix, 0)  # Diagonal means self-bonding is not allowed
+
+        # Track connected fragments
+        fragments = find_fragments(adjacency_matrix)
+
+        # Store results
+        if len(fragments) > 1 and fragments not in fragmentations:
+            fragmentations.append(fragments)
+            
+    # empty list : no fragmentation detected
+    if not fragmentations:
+        warnings.warn("No fragmentations found.", category=UserWarning)
+
+    return fragmentations
 
 
 def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragment",
@@ -23,19 +169,23 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
     Additional Keyword Arguments
     ----------------------------
     - alpha_atoms : float
-        Opacity of atoms. Default: 0.55.
+        Opacity of atoms. Default: 0.55
     - alpha_bonds : float
-        Opacity of bonds. Default: 0.55.
+        Opacity of bonds. Default: 0.55
     - atom_scaler : float
-        Scaling factor for atom visualization. Default: 20.
+        Scaling factor for atom visualization. Default: 20
     - bond_scaler : float
-        Scaling factor for bond visualization. Default: 10,000.
+        Scaling factor for bond visualization. Default: 10,000
     - legend : bool
-        Show legend in the visualization. Default: True.
+        Show legend in the visualization. Default: True
     - scale_box : bool
-        Show scale box in the visualization. Default: True.
+        Show scale box in the visualization. Default: True
     - unit_bar : bool
-        Show unit bar in the visualization. Default: False.
+        Show unit bar in the visualization. Default: True
+    - camera_projection : str
+        ['orthographic', 'perspective'] Defaut: 'orthographic'
+    - template : str
+        ['plotly', 'plotly_dark', etc. ] Defaut: 'plotly_dark'
 
     Returns
     -------
@@ -112,7 +262,11 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                 text=['1 Å'],
                 textposition='top center',
                 textfont=dict(size=12, color='red'),
-                showlegend=False
+                showlegend=False,
+                name=f'Bar',
+                legendgroup=f'Box',
+                hoverinfo='text',
+                hovertext=f'Bar'
             ) if unit_bar else go.Scatter3d(
                 x=[hl, hl],
                 y=[-hl, +hl],
@@ -122,8 +276,12 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                 text=[f'{np.round(hl*2, 1)} Å'],
                 textposition='top center',
                 textfont=dict(size=12, color='red'),
-                showlegend=False
-            ),
+                showlegend=False,
+                name=f'Bar',
+                legendgroup=f'Box',
+                hoverinfo='text',
+                hovertext=f'Bar'            
+                ),
             # box lines
             go.Scatter3d(
                 x=x_box_lines,
@@ -131,7 +289,11 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                 z=z_box_lines,
                 mode='lines',
                 line=dict(color='grey', width=4),
-                showlegend=False
+                showlegend=True,
+                name=f'Box',
+                legendgroup=f'Box',
+                hoverinfo='text',
+                hovertext=f'Box'
             )
             ]
         return box_plots
@@ -143,7 +305,9 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
     bond_scaler = kwargs.get("bond_scaler", 8200000)
     scale_box = kwargs.get("scale_box", True)
     legend = kwargs.get("legend", True)
-    unit_bar = kwargs.get("unit_bar", False)
+    unit_bar = kwargs.get("unit_bar", True)
+    camera_projection = kwargs.get("camera_projection", "orthographic")
+    template = kwargs.get("template", "plotly_dark")
 
     # Make sure each position is centered
     for atoms in images:
@@ -231,7 +395,7 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
                     marker=dict(size=atom_size, color=frag_color),
                     name=f'Fragment {frag_idx + 1}',
                     legendgroup=f'Fragment {frag_idx + 1}',
-                    showlegend=True if legend else False,
+                    showlegend=True,
                     hoverinfo='text',
                     hovertext=f'Fragment {frag_idx + 1}'
                 ))
@@ -324,13 +488,94 @@ def animation(images:list[ase.Atoms], frag_indices:list=None, colorby:str="fragm
             yaxis=dict(range=max_range if scale_box else y_range, visible=False),
             zaxis=dict(range=max_range if scale_box else z_range, visible=False),
             aspectmode='manual',
-            camera_projection=dict(type='orthographic'),
+            camera_projection=dict(type=camera_projection), # orthograpic perspective
             aspectratio=dict(x=1, y=1, z=1),
         ),
-        showlegend=True if legend else False
+        showlegend=True if legend else False,
+        template=template,
     )
     
     fig.show()
+
+
+def fragment_selector(mol:Chem.Mol, **kwargs):
+    """
+    Plot RDKit 2D mol using Plotly.
+    """
+    # parsing kwargs
+    plot_bgcolor = kwargs.get('plot_bgcolor', 'white')
+
+    # get 2D coordinates
+    coords = mol.GetConformer().GetPositions()
+    symbols = [atom.GetSymbol() for atom in mol.GetAtoms()]
+    x = coords[:, 0]
+    y = coords[:, 1]
+    
+    # trace container 
+    data = []
+
+    # add bonds (line indicates interatomic connectivity not a bond order)
+    for bond in mol.GetBonds():
+        i = bond.GetBeginAtomIdx()
+        j = bond.GetEndAtomIdx()
+        x_line = [x[i], x[j]]
+        y_line = [y[i], y[j]]
+        data.append(go.Scatter(
+            x=x_line, 
+            y=y_line, 
+            mode='lines',
+            opacity=0.7,
+            line=dict(
+                width=3, 
+                color='#3f3f3f'
+                )
+            )
+         )
+
+    # add atoms
+    data.append(go.Scatter(
+        x=x,
+        y=y,
+        mode='markers+text',
+        marker=dict(
+            size=23, 
+            color='white', 
+            #opacity=0.7
+            ),
+        textfont=dict(
+            size=20,
+            color='black',
+        ),
+        text=symbols,
+        textposition="middle center",
+        hoverinfo="none"
+        )
+    )     
+
+    fig = go.FigureWidget(data=data)
+
+    # plot settings
+    fig.update_layout(
+        width=800, height=600,
+        showlegend=False,
+        xaxis=dict(visible=False, scaleanchor="y"),
+        yaxis=dict(visible=False),
+        template='plotly_white',
+        plot_bgcolor=plot_bgcolor,
+        dragmode='lasso'
+    )
+    # callback function
+    def selected_indices(trace, points, selector):
+        if points.point_inds:
+            selected_points = points.point_inds
+            print(selected_points)
+        else:
+          print('No atoms are selected')
+
+    fig.data[-1].on_selection(selected_indices)
+          
+    display(fig)
+    print()
 
 
 def read_traj(trajFile:str, returnString=False)->list[ase.Atoms|str]: 
@@ -391,142 +636,119 @@ def progress_bar(total, current)->None:
   print(progress_bar_string)
 
 
-def is_ipython():
-  try:
-    __IPYTHON__
-    return True
-  except NameError:
-    return False
-
-
-def husl_palette(pal_len:int)->list:
+def json_dump(trajDIASresult:dict, runtime:float, job_name:str, metadata:Union[str, dict])->None:
   """
-  Description
-  -----------
-  seaborn husl palette without seaborn 
+  Dump the DIAS results into a JSON file.
 
   Parameters
   ----------
-    - pal_len(int) : n_colors in husl palette ( 2 =< pal_len =< 9 )
-
-  Returns
-  -------
-    - palette(list) : RGB list
+    
   """
-  match pal_len:
-    case 2:
-      return [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-              (0.21044753832183283, 0.6773105080456748, 0.6433941168468681)]
-    case 3:
-      return [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-              (0.3126890019504329, 0.6928754610296064, 0.1923704830330379),
-              (0.23299120924703914, 0.639586552066035, 0.9260706093977744)]
-    case 4:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.5920891529639701, 0.6418467016378244, 0.1935069134991043),
-               (0.21044753832183283, 0.6773105080456748, 0.6433941168468681),
-               (0.6423044349219739, 0.5497680051256467, 0.9582651433656727)]
-    case 5:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.6804189127793346, 0.6151497514677574, 0.19405452111445337),
-               (0.20125317221201128, 0.6907920815379025, 0.47966761189275336),
-               (0.2197995660828324, 0.6625157876850336, 0.7732093159317209),
-               (0.8004936186423958, 0.47703363533737203, 0.9579547196007522)]
-    case 6:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.7350228985632719, 0.5952719904750953, 0.1944419133847522),
-               (0.3126890019504329, 0.6928754610296064, 0.1923704830330379),
-               (0.21044753832183283, 0.6773105080456748, 0.6433941168468681),
-               (0.23299120924703914, 0.639586552066035, 0.9260706093977744),
-               (0.9082572436765556, 0.40195790729656516, 0.9576909250290225)]
-    case 7:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.7757319041862729, 0.5784925270759935, 0.19475566538551875),
-               (0.5105309046900421, 0.6614299289084904, 0.1930849118538962),
-               (0.20433460114757862, 0.6863857739476534, 0.5407103379425205),
-               (0.21662978923073606, 0.6676586160122123, 0.7318695594345369),
-               (0.5049017849530067, 0.5909119231215284, 0.9584657252128558),
-               (0.9587050080494409, 0.3662259565791742, 0.9231469575614251)]
-    case 8:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.8087954113106306, 0.5634700050056693, 0.19502642696727285),
-               (0.5920891529639701, 0.6418467016378244, 0.1935069134991043),
-               (0.19783576093349015, 0.6955516966063037, 0.3995301037444499),
-               (0.21044753832183283, 0.6773105080456748, 0.6433941168468681),
-               (0.22335772267769388, 0.6565792317435265, 0.8171355503265633),
-               (0.6423044349219739, 0.5497680051256467, 0.9582651433656727),
-               (0.9603888539940703, 0.3814317878772117, 0.8683117650835491)]
-    case 9:
-      return  [(0.9677975592919913, 0.44127456009157356, 0.5358103155058701),
-               (0.8369430560927636, 0.5495828952802333, 0.1952683223448124),
-               (0.6430915736746491, 0.6271955086583126, 0.19381135329796756),
-               (0.3126890019504329, 0.6928754610296064, 0.1923704830330379),
-               (0.20582072623426667, 0.6842209016721069, 0.5675558225732941),
-               (0.2151139535594307, 0.6700707833028816, 0.7112365203426209),
-               (0.23299120924703914, 0.639586552066035, 0.9260706093977744),
-               (0.731751635642941, 0.5128186367840487, 0.9581005178234921),
-               (0.9614880299080136, 0.3909885385134758, 0.8298287106954371)]
-    case _:
-      raise ValueError(f"{pal_len} is not in [2, 9], 2 =< pal_len =< 9")
-
-
-def markers_(lens:int)->list:
-  """
-  Description
-  -----------
-  matplotlib markers
-
-  Parameters
-  ----------
-    - len(lens) : number of plots ( 2 =< lens =< 9 )
-
-  Returns
-  -------
-    - palette(list) : RGB list
-  """
-  match lens:
-    case 2:
-      return ["v", "^"]
-    case 3:
-      return ["2", "3", "4"]
-    case 4:
-      return [">", "<", "^", "v"]
-    case 5:
-      return [">", "<", "^", "s", "D"]
-    case 6:
-      return ["1", "3", "4", "v", "<", ">"]
-    case 7:
-      return ["1", "3", "4", "v", "<", ">", "^"]
-    case 8:
-      return ["1", "2", "3", "4", "v", "<", ">", "^"]
-    case 9:
-      return [">", "<", "^", "s", "D", "1", "2", "3", "4"]
-    case _:
-      raise ValueError(f"{lens} is not in [2, 9], 2 =< lens =< 9")
-
-
-# def json_dump(trajDIASresult:dict, trajFile:str, resultSavePath:str="./result.json", title=None, note=None)->None:
-#   """
-#   Description
-#   -----------
-#   Dump the DIAS results into a JSON file.
-
-#   Parameters
-#   ----------
-#     - trajDIASresult (dict): The DIAS results to be dumped.
-#     - trajFile (str): The path to the trajectory file.
-#     - resultSavePath (str, optional): The path to save the JSON file. Default is "./result.json".
-#     - title (str, optional): Title for the JSON file. Default is None.
-#     - note (str, optional): Additional note for the JSON file. Default is None.
-#   """
-#   with open(resultSavePath, "w") as file:
-#     json.dump({
-#       "title"           : title if title else "",
-#       "note"            : note if note else "",
-#       "trajectory_file" : basename(trajFile) if isfile(trajFile) else "",
-#       "submission_date" : str(datetime.now().strftime("%Y-%m-%d %H:%M")),
-#       "result"          : trajDIASresult
-#         }, file, indent=4, ensure_ascii=False)
+  _savepath = f'./{job_name}.json'
+  with open(_savepath, "w") as file:
+    json.dump({
+      "METADATA": metadata,
+      "DATE": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+      "RUNTIME(min)": runtime,
+      "RESULT": trajDIASresult
+      }, 
+      fp=file, 
+      indent=4, 
+      ensure_ascii=False
+      )
     
 
+def relative_values(energy_series:Union[list, tuple], relative_index:Union[str, int]="min")->tuple:
+    """
+    Compute relative energy values based on a reference point.
 
+    Parameters
+    ----------
+    - energy_series (list | tuple) : A list or tuple of absolute energy values.
+    - relative_index (str | int, optional) : The reference point for computing relative energy values. IRC index starts with 0. Default is "min".
+        If "min", the minimum value in the `energy_series` is used as the reference point.
+        If an integer, the value at the specified index in the `energy_series` is used as the reference point.
+            - `0` : First IRC point
+            - `-1` : Last IRC point
+
+    Returns
+    -------
+    - Relative energy(tuple) : A tuple of relative energy values.
+    """
+    _energy_series = np.array(energy_series)
+    if relative_index == "min":
+        _energy_series -= np.min(_energy_series)
+    elif type(relative_index) == int:
+        _energy_series -= _energy_series[relative_index]
+    else:
+        raise ValueError(f"Invalid relative_index value : {relative_index}")
+    return _energy_series.tolist()
+
+
+def DIASparser(resultDict:Union[dict, str], frag_type:str, 
+               energy_type:str, relative_idx:Union[str,int]=None, 
+               unit_conversion:Union[float, str]='eV'):
+    """
+    Parses DIAS results from a dictionary based on the specified fragment type, energy type, relative index, and unit.
+
+    Parameters
+    ----------
+    - resultDict (dict|str) : The dictionary containing DIAS results.
+    - frag_type (str) : The type of fragment or molecule to parse (`molecule` or `fragment names`).
+    - energy_type (str) : The type of energy to parse ("total", "interaction", or "distortion").
+    - relative_idx (str|int) : The index of the reference energy value for computing relative values.
+    - unit_conversion (str|float) : Default unit is eV.
+        - ["KJ/MOL", "HARTREE", "KCAL/MOL", "EV"]
+    Returns
+    -------
+    - energies(tuple) : A tuple of parsed energy values.
+    """
+    eV2unitFactors = {
+       "KJ/MOL"  :  1/kJ * mol, 
+       "HARTREE" :  1/Hartree, 
+       "KCAL/MOL":  1/kcal * mol, 
+       "EV"      :  eV
+       }
+    
+    # convert to str to float
+    if isinstance(unit_conversion, str):
+        UNIT_CONVERSION = unit_conversion.upper() 
+        assert UNIT_CONVERSION in eV2unitFactors.keys(), 'Invalid unit'
+        unit_conversion = eV2unitFactors[UNIT_CONVERSION]
+
+    # read json format resultDict file
+    if isinstance(resultDict, str):
+        assert exists(resultDict), "The resultDict file does not exist."
+        with open(resultDict, 'r') as file:
+            resultDict = json.load(file)
+
+    # get RESULT data from the json
+    if resultDict.get('RESULT'):
+        result = resultDict['RESULT']
+    elif resultDict.get('0'):
+        result = resultDict
+    else:
+        raise ValueError('asedias cannot parse the result from the json file')
+  
+    # get frag_names list
+    frag_names = set(result['0'].keys()) 
+    frag_names -= {'molecule', 'success'}
+
+    # validate parameter values
+    assert frag_type in {'molecule', *frag_names}, f"Invalid name, `{frag_type}`"
+    assert energy_type in ({'distortion'} if frag_type in frag_names else {'distortion', 'interaction', 'total'}), 'Invalid energy_type' 
+
+    energySeries = np.array([pointResult[frag_type][energy_type] for pointResult in result.values()]) * unit_conversion
+    
+    # get relative values
+    if relative_idx:
+        energySeries = relative_values(energy_series=energySeries, relative_index=relative_idx)
+    
+    return energySeries
+
+
+def convert_df(resultDict:dict)->pd.DataFrame:
+    """
+    Convert asedias resultDict to pd.DataFrame
+    """
+    pass

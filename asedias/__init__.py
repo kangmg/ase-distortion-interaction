@@ -1,5 +1,5 @@
 from .samples import available_data, load_data
-from .base import System, aseDIAS, Engine
+from .core import System, aseDIAS, Engine, Fragmentation
 from .dias import ParameterManager
 from .utils import read_traj
 
