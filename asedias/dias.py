@@ -12,6 +12,7 @@ import itertools
 if is_ipython:
     from IPython.display import clear_output
 
+
 class ParameterManager:
     """Package parameter manager class
     
@@ -57,7 +58,6 @@ class ParameterManager:
             return pformat(_params, indent=1)
         except ModuleNotFoundError:
             return _params
-
 
 
 def potential_energy(calc_wrapper:Callable[..., Calculator], atoms:ase.Atoms, charge:int, spin:int, use_spin:bool)->float:
@@ -300,7 +300,7 @@ def trajDIAS(
             use_spin=use_spin
             )
         success_list.append(DIASresult['success'])
-        trajDIASresult[image_idx] = DIASresult
+        trajDIASresult[str(image_idx)] = DIASresult
     
     if not all(success_list) or not success_list: warnings.warn("asedias CALCULATION ABNORMALLY TERMINATED", category=UserWarning)
     else: print("asedias CALCULATION NORMALLY TERMINATED")

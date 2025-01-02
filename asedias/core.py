@@ -1,13 +1,16 @@
 import ase
 import numpy as np
 import asedias
-from asedias.utils import read_traj, animation, autofrag, fragment_selector, atoms2rdkit_mol, json_dump
+from asedias.utils import (read_traj, animation, autofrag, fragment_selector, 
+                           atoms2rdkit_mol, json_dump, convert_df)
 from asedias.dias import trajDIAS
+from asedias.plot import plot_dias
 import os
 from typing import Callable, Union
 import warnings
 import uuid
 import time
+import pandas as pd
 
 
 # TODO
@@ -21,8 +24,7 @@ class System:
     def __init__(self, frag_indices:Union[list[list[int]], np.ndarray], frag_charges:list[int], 
                  frag_spins:list[int]=None, system_charge:int=None, system_spin:int=None, 
                  images:list[ase.Atoms]=None, filepath:str=None, frag_names:list[str]=None, 
-                 constraints:Union[list[int], np.ndarray]=None
-                 ):
+                 constraints:Union[list[int], np.ndarray]=None):
         """
         
         Parameters
@@ -229,6 +231,37 @@ class aseDIAS:
             job_name=self.job_name,
             metadata=self.metadata
             )
+    
+    def plot(self, include_fragments:bool=True, yaxis_unit:str='eV', 
+              relative_idx:Union[str, int]=0, geometric_indices:list[int]=None, 
+              save_name:str=None, **kwargs):
+        """
+        Plot asedias result
+        """
+        plot_dias(
+            images=self.system.images,
+            resultDict=self.resultDict,
+            include_fragments=include_fragments,
+            yaxis_unit=yaxis_unit,
+            relative_idx=relative_idx,
+            geometric_indices=geometric_indices,
+            save_name=self.job_name
+            )
+    
+    def to_pandas(self)->pd.DataFrame:
+        """
+        Convert asedias result to pandas dataframe.
+        """
+        return convert_df(self.resultDict)
+    
+    
+    def to_csv(self, savepath:str=None):
+        """
+        Save asedias result in .csv format
+        """
+        if not savepath:
+            savepath = f"./{self.job_name}.csv"
+        convert_df(self.resultDict).to_csv(savepath)
 
 
 class Fragmentation:

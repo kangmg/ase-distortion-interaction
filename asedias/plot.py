@@ -1,33 +1,12 @@
 import ase
 import warnings
 from typing import Union
+import ase.atom
 import matplotlib.pyplot as plt
 from asedias.utils import DIASparser
 
 
-def xaxis_formatter(images:list[ase.Atoms], indices:list=None)->str:
-    """
-    returns x-axis text & x-axis parameters
-    """
-    _first_image = images[0]
-    if not indices:
-        # IRC
-        xaxis = 'IRC Points'
-        params = tuple(i for i in range(len(_first_image)))
-    else:
-        axis_unit = {"Angle": "Degree", "Distance": "Å", "Dihedral Angle": "Degree"}
-        axis_head = {"Angle": "∠", "Distance": "r", "Dihedral Angle": "∠"}
-        param_type, params = geometric_analysis(images=images, indices=indices)
-        symbols = _first_image.get_chemical_symbols()
-        selected_symbols = list(symbols[idx] for idx in indices)
-        # symbols_text = "-".join(list(f"{arg[0]}({arg[1]})" for arg in zip(selected_symbols, indices))) # e.g. H0-O1-H2
-        symbols_text = "-".join(selected_symbols) # e.g. H-O-H
-        xaxis = f'{axis_head[param_type]} {symbols_text} / {axis_unit[param_type]}'
-
-    return xaxis, params
-
-
-def geometric_analysis(images:list[ase.Atoms], indices:list[int])->tuple:
+def geometric_analysis(images:list[ase.Atoms], geometric_indices:list[int])->tuple:
     """
     get list of internal coordinates
     
@@ -40,29 +19,51 @@ def geometric_analysis(images:list[ase.Atoms], indices:list[int])->tuple:
                all(lst[i] >= lst[i + 1] for i in range(len(lst) - 1))
     
     # check invalid index
-    _index_diff = set(indices) - set(i for i in range(len(images[0])))
-    assert _index_diff == set(), f"Invalid indices, {_index_diff}"
+    _index_diff = set(geometric_indices) - set(i for i in range(len(images[0])))
+    assert _index_diff == set(), f"Invalid geometric_indices, {_index_diff}"
 
     # distance
-    if len(indices) == 2:
-        params = tuple(map(lambda atoms: atoms.get_distance(*indices), images))
-        param_type = "Distance"
+    if len(geometric_indices) == 2:
+        xaxis = tuple(map(lambda atoms: atoms.get_distance(*geometric_indices), images))
+        xaxis_type = "Distance"
     # angle
-    elif len(indices) == 3:
-        params = tuple(map(lambda atoms: atoms.get_angle(*indices), images))
-        param_type = "Angle"
+    elif len(geometric_indices) == 3:
+        xaxis = tuple(map(lambda atoms: atoms.get_angle(*geometric_indices), images))
+        xaxis_type = "Angle"
     # dihedral angle
-    elif len(indices) == 4:
-        params = tuple(map(lambda atoms: atoms.get_dihedral(*indices), images))
-        param_type = "Dihedral Angle"
+    elif len(geometric_indices) == 4:
+        xaxis = tuple(map(lambda atoms: atoms.get_dihedral(*geometric_indices), images))
+        xaxis_type = "Dihedral Angle"
     else:
-        raise ValueError(f"Invalid number of indices. Expected 2/3/4, got {len(indices)}")
+        raise ValueError(f"Invalid number of geometric_indices. Expected 2/3/4, got {len(geometric_indices)}")
 
     # check monotonicity 
-    if not _is_monotonic(params):
+    if not _is_monotonic(xaxis):
         warnings.warn("The x-axis values are not monotonic. This may lead to unexpected behavior in the plot.", UserWarning)
 
-    return param_type, params
+    return xaxis_type, xaxis
+
+
+def xaxis_formatter(images:list[ase.Atoms], geometric_indices:list=None)->str:
+    """
+    returns x-axis text & x-axis parameters
+    """
+    _first_image = images[0]
+    if not geometric_indices:
+        # IRC
+        xaxis_string = 'IRC Points'
+        xaxis = tuple(str(i) for i in range(len(images)))
+    else:
+        xaxis_unit = {"Angle": "Degree", "Distance": "Å", "Dihedral Angle": "Degree"}
+        xaxis_head = {"Angle": "∠", "Distance": "r", "Dihedral Angle": "∠"}
+        xaxis_type, xaxis = geometric_analysis(images=images, geometric_indices=geometric_indices)
+        symbols = _first_image.get_chemical_symbols()
+        selected_symbols = list(symbols[idx] for idx in geometric_indices)
+        # symbols_text = "-".join(list(f"{arg[0]}({arg[1]})" for arg in zip(selected_symbols, geometric_indices))) # e.g. H0-O1-H2
+        symbols_text = "-".join(selected_symbols) # e.g. H-O-H
+        xaxis_string = f'{xaxis_head[xaxis_type]} {symbols_text} / {xaxis_unit[xaxis_type]}'
+
+    return xaxis_string, xaxis
 
 
 def husl_palette(pal_len:int)->list:
@@ -165,8 +166,8 @@ def get_markers(lens:int)->list:
         raise ValueError(f"{lens} is not in [2, 9]")
 
 
-def plot_dias(resultDict:dict, axis_type:str, include_fragments:bool=False, 
-              yaxis_unit:str='eV', relative_idx:Union[str, int]=0, **kwargs):
+def plot_dias(images:list[ase.Atoms], resultDict:dict, include_fragments:bool=False, yaxis_unit:str='eV', 
+              relative_idx:Union[str, int]=0, geometric_indices:list[int]=None, save_name:str=None, **kwargs):
     """
     Plot dias result
     """
@@ -174,79 +175,76 @@ def plot_dias(resultDict:dict, axis_type:str, include_fragments:bool=False,
     mk_bool = kwargs.get("marker", False)
     ls_bool = kwargs.get("linestyle", True)
     hline = kwargs.get('hline', True)
+
+    if yaxis_unit.upper() == 'EV':
+        _unit = 'eV'
+    elif yaxis_unit.upper() == 'KCAL/MOL':
+        _unit = 'kcal/mol'
+    elif yaxis_unit.upper() == 'KJ/MOL':
+        _unit = 'kJ/mol'
+    elif yaxis_unit.upper() == 'HARTREE':
+        _unit = 'Hartree'
+    else:
+        raise ValueError("Unsupported yaxis_unit") 
     
+    xaxis_string, xaxis = xaxis_formatter(images=images, geometric_indices=geometric_indices)
+    yaxis_string = f"{'Rel. ' if relative_idx is not None else ''}Energy / {_unit}"
 
-    if axis_type.upper() == 'IRC':
-        xaxis_formatter()
-        
+    # holizontal line
+    if hline:
+        plt.plot(xaxis, [0]*len(xaxis), linewidth=.5, color='black')
+    
+    # basic dias results
+    basic_energy_componet = ["total", "distortion", "interaction"] # energies to plot
+    colors_list = ["black", "tab:blue", "tab:red"]
+    marker_list = ["+", "x", "4"]
+    linestyle_list = ["-", "-.", "--"]
+    for idx, energy_type in enumerate(basic_energy_componet):
+        energy_series = DIASparser(
+            resultDict=resultDict, 
+            frag_type="molecule", 
+            energy_type=energy_type, 
+            relative_idx=relative_idx, 
+            unit_conversion=_unit
+            )
+        plt.plot(
+            xaxis, 
+            energy_series, 
+            label=f"E_{energy_type[:3]}",
+            color=colors_list[idx], 
+            marker=marker_list[idx] if mk_bool else None, 
+            linestyle=linestyle_list[idx] if ls_bool else None
+            )
 
-#
-#  # get geometric axis and xlabel
-#  match axis_type:
-#    case "irc":
-#      geo_param_axis_ = DIASparser(DIASresult, fragType="irc")
-#      xlabel_ = "IRC points"
-#    case "distance" | "angle" | "dihedral":
-#      paramType, x_axis_format = xaxis_formatter(trajFile, geo_param)
-#      if paramType == axis_type:
-#        geo_param_axis_ = geometric_parameter(trajFile, geo_param)
-#        xlabel_ = x_axis_format
-#      else:
-#        raise ValueError(f"Incosistancy between geo_param / axis_type, geo_param got {paramType} but axis_type got {axis_type}")
-#  
-#  # ylabel
-#  ylabel_ = f"{'Rel. ' if relative_idx is not None else ''}Energy / {unit}"
-#
-#  # show horizontal reference line
-#  if horizontal_line:
-#    plt.plot(geo_param_axis_, [0]*len(geo_param_axis_), linewidth=.5, color="black")
-#
-#  # plot basic components | total, distortion, interaction of super-molecule
-#  default_energy_componet = ["total", "distortion", "interaction"] # energies to plot
-#  colors_list = ["black", "tab:blue", "tab:red"]
-#  marker_list = ["+", "x", "4"]
-#  linestyle_list = ["-", "-.", "--"]
-#  for idx, EnergyType in enumerate(default_energy_componet):
-#    tmp_energy = DIASparser(
-#      resultDictionary=DIASresult, 
-#      fragType="molecule", 
-#      energyType = EnergyType, 
-#      relative_idx=relative_idx, 
-#      unit=unit
-#      ) 
-#    plt.plot(
-#      geo_param_axis_, 
-#      tmp_energy, 
-#      label=f"E_{EnergyType[:3]}",
-#      color=colors_list[idx], 
-#      marker=marker_list[idx] if mk_bool else None, 
-#      linestyle=linestyle_list[idx] if ls_bool else None
-#      )
-#  
-#  # if True, plot fragment distortion energies
-#  if include_fragments == True:
-#    line_style_= ":"
-#    fragment_names, _ = fragments_params_processing(fragments_params)
-#    n_frags = len(fragment_names)
-#    clr_list = husl_palette(n_frags)
-#    mkr_list = markers_(n_frags) 
-#    for idx, fragment in enumerate(fragment_names):
-#      frag_dist_energy =  DIASparser(
-#        resultDictionary=DIASresult, 
-#        fragType=fragment, 
-#        energyType = "distortion", 
-#        relative_idx=relative_idx, 
-#        unit=unit
-#        )
-#      plt.plot(
-#        geo_param_axis_, 
-#        frag_dist_energy, 
-#        label=f"E_dis({fragment})", 
-#        color=clr_list[idx], 
-#        marker=mkr_list[idx] if mk_bool else None, 
-#        linestyle=line_style_ if ls_bool else None
-#        ) 
-#  
-#  plt.legend()
-#  plt.xlabel(xlabel_)
-#  plt.ylabel(ylabel_)
+    if include_fragments:
+        frag_names = set(resultDict['0'].keys()) - {'molecule', 'success'}
+        frag_names = sorted(list(frag_names))
+
+        line_style_= ":"
+        n_frags = len(frag_names)
+        clr_list = husl_palette(n_frags)
+        mkr_list = get_markers(n_frags) 
+
+        for idx, fragment in enumerate(frag_names):
+            frag_dist_energy =  DIASparser(
+                resultDict=resultDict, 
+                frag_type=fragment, 
+                energy_type = "distortion", 
+                relative_idx=relative_idx,
+                unit_conversion=_unit
+                )
+            plt.plot(
+                xaxis, 
+                frag_dist_energy, 
+                label=f"E_dis({fragment})", 
+                color=clr_list[idx], 
+                marker=mkr_list[idx] if mk_bool else None, 
+                linestyle=line_style_ if ls_bool else None
+                ) 
+    
+    plt.legend()
+    plt.xlabel(xaxis_string)
+    plt.ylabel(yaxis_string)
+
+    if save_name: plt.savefig(f"{save_name}.png")
+    plt.show()

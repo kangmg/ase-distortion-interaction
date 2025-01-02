@@ -678,7 +678,7 @@ def relative_values(energy_series:Union[list, tuple], relative_index:Union[str, 
     _energy_series = np.array(energy_series)
     if relative_index == "min":
         _energy_series -= np.min(_energy_series)
-    elif type(relative_index) == int:
+    elif isinstance(relative_index, int):
         _energy_series -= _energy_series[relative_index]
     else:
         raise ValueError(f"Invalid relative_index value : {relative_index}")
@@ -741,14 +741,34 @@ def DIASparser(resultDict:Union[dict, str], frag_type:str,
     energySeries = np.array([pointResult[frag_type][energy_type] for pointResult in result.values()]) * unit_conversion
     
     # get relative values
-    if relative_idx:
-        energySeries = relative_values(energy_series=energySeries, relative_index=relative_idx)
+    if relative_idx != None:
+        return relative_values(energy_series=energySeries, relative_index=relative_idx)
     
     return energySeries
 
 
 def convert_df(resultDict:dict)->pd.DataFrame:
     """
-    Convert asedias resultDict to pd.DataFrame
+    Convert asedias json-format result dict to pandas dataframe.
     """
-    pass
+    def _get_value(resultDict:dict, keys:list):
+        if len(keys) == 1:
+            return resultDict[keys[0]]
+        else:
+            return _get_value(resultDict[keys[0]], keys[1:])
+
+    data_container = dict()
+
+    for irc_idx in resultDict.keys():
+        for frag_key in resultDict[irc_idx].keys():
+            if isinstance(resultDict[irc_idx][frag_key], dict):
+                for energy_key in resultDict[irc_idx][frag_key].keys():
+                    if not data_container.get(f"{frag_key}_{energy_key}"):
+                        data_container[f"{frag_key}_{energy_key}"] = list()
+                    data_container[f"{frag_key}_{energy_key}"].append(_get_value(resultDict=resultDict, keys=[irc_idx, frag_key, energy_key]))
+            else:
+                if not data_container.get(f"{frag_key}"):
+                    data_container[f"{frag_key}"] = list()
+                data_container[f"{frag_key}"].append(_get_value(resultDict=resultDict, keys=[irc_idx, frag_key]))
+    
+    return pd.DataFrame(data_container)
