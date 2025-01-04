@@ -2,11 +2,14 @@
 # Licensed under the MIT License.
 # Code Source : https://github.com/isayevlab/AIMNet2
 
+# Modified version of old branch code.
+
 import torch
 import torch.nn.functional as F
 import ase.calculators.calculator
 from ase.calculators.calculator import all_changes
 import numpy as np
+
 
 class AIMNet2Calculator(ase.calculators.calculator.Calculator):
     """ ASE calculator for AIMNet2 model
