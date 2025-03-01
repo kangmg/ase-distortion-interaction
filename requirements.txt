@@ -2,4 +2,4 @@ matplotlib
 numpy
 requests
 ase>=3.22.1
-torch==2.2.1
+torch>=2.2.1

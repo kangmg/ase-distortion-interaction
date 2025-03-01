@@ -119,7 +119,7 @@ class Engine:
     def __init__(self, calc_wrapper, preoptimizer_wrapper=None):
         self.calc_wrapper = calc_wrapper
         self.preoptimizer_wrapper = preoptimizer_wrapper
-
+        
 
 # class ParameterManager:
 #     """Package parameter manager class
