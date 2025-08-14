@@ -1,6 +1,11 @@
 > [!WARNING]  
 > The main branch is under refactoring. Check the old branch.
 
+> [!CAUTION]  
+> This project is **inefficient**, so **no longer maintained**.  
+> Please check the updated repository here: [asedias](https://github.com/kangmg/asedias)
+
+
 ## Recommended ASE Calculators (tested)
 - semi-emphirical methods
   - xTB (TBLite Calculator)
